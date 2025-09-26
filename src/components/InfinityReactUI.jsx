@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PeerReview from './PeerReview';
 
 // Stub Decision Table IDE
 const DATATYPES = ['String', 'Number', 'Boolean', 'Date'];
@@ -319,7 +320,7 @@ import InfinityIcon from '../assets/infinity.svg';
 import { 
   ChevronDown, Plus, RefreshCw, GitBranch, GitCommit, Clock, 
   FileText, FolderOpen, Settings, User, Search, X, AlertCircle, 
-  GitPullRequest, Download, Upload 
+  GitPullRequest, Download, Upload, Home 
 } from 'lucide-react';
 
 const InfinityReactUI = () => {
@@ -330,6 +331,8 @@ const InfinityReactUI = () => {
   const [commitDescription, setCommitDescription] = useState('');
   // Editor mode: 'table' for Decision Table IDE, 'dmn' for DMN IDE
   const [editorMode, setEditorMode] = useState('table');
+  // Peer Review page state
+  const [showPeerReview, setShowPeerReview] = useState(false);
 
   const changedFiles = [
     { name: 'Claims Processing Automation Model', status: 'modified', additions: 12, deletions: 3 },
@@ -419,11 +422,21 @@ const InfinityReactUI = () => {
 
           {/* Actions */}
           <div className="p-3 space-y-2">
+            <button
+              className="w-full flex items-center space-x-2 p-2 text-left hover:bg-gray-200 rounded-md"
+              onClick={() => setShowPeerReview(false)}
+            >
+              <Home className="w-4 h-4 text-gray-500" />
+              <span className="text-sm text-gray-700">Home</span>
+            </button>
             <button className="w-full flex items-center space-x-2 p-2 text-left hover:bg-gray-200 rounded-md">
               <Download className="w-4 h-4 text-gray-500" />
               <span className="text-sm text-gray-700">Fetch origin</span>
             </button>
-            <button className="w-full flex items-center space-x-2 p-2 text-left hover:bg-gray-200 rounded-md">
+            <button
+              className="w-full flex items-center space-x-2 p-2 text-left hover:bg-gray-200 rounded-md"
+              onClick={() => setShowPeerReview(true)}
+            >
               <GitPullRequest className="w-4 h-4 text-gray-500" />
               <span className="text-sm text-gray-700">View PRs</span>
             </button>
@@ -436,178 +449,188 @@ const InfinityReactUI = () => {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
-          {/* Toolbar */}
-          <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setActiveTab('changes')}
-                className={`px-3 py-1 rounded-md text-sm font-medium ${
-                  activeTab === 'changes' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                Changes ({changedFiles.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`px-3 py-1 rounded-md text-sm font-medium ${
-                  activeTab === 'history' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                History
-              </button>
-                <button
-                  onClick={() => setActiveTab('editor')}
-                  className={`px-3 py-1 rounded-md text-sm font-medium ${
-                    activeTab === 'editor' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                >
-                  Editor
-                </button>
+          {showPeerReview ? (
+            <div className="flex-1 bg-white overflow-auto">
+              <div className="p-4">
+                <PeerReview />
+              </div>
             </div>
-            <div className="relative">
-              <Search className="w-4 h-4 text-gray-400 absolute left-2 top-1/2 transform -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Filter files"
-                className="pl-8 pr-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {activeTab === 'changes' && (
-            <div className="flex-1 flex">
-              {/* File List */}
-              <div className="w-1/2 border-r border-gray-200 bg-white flex flex-col">
-                <div className="p-4 flex-1">
-                  <h3 className="text-sm font-medium text-gray-800 mb-3">Changed rules</h3>
-                  <div className="space-y-1">
-                    {changedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md cursor-pointer">
-                        {getStatusIcon(file.status)}
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-gray-800">{file.name}</div>
-                          <div className="text-xs text-gray-500">+{file.additions} -{file.deletions}</div>
-                        </div>
-                        <input type="checkbox" className="rounded border-gray-300" defaultChecked />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Commit Section */}
-                <div className="border-t border-gray-200 p-4">
-                  <div className="mb-4">
-                    <input
-                      type="text"
-                      placeholder="Summary (required)"
-                      value={commitMessage}
-                      onChange={(e) => setCommitMessage(e.target.value)}
-                      className="w-full p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <textarea
-                      placeholder="Description"
-                      value={commitDescription}
-                      onChange={(e) => setCommitDescription(e.target.value)}
-                      rows="3"
-                      className="w-full mt-2 p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-                    />
-                  </div>
+          ) : (
+            <>
+              {/* Toolbar */}
+              <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+                <div className="flex items-center space-x-4">
                   <button
-                    disabled={!commitMessage.trim()}
-                    className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded-md text-sm font-medium"
+                    onClick={() => setActiveTab('changes')}
+                    className={`px-3 py-1 rounded-md text-sm font-medium ${
+                      activeTab === 'changes' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-800'
+                    }`}
                   >
-                    Commit to {currentBranch}
+                    Changes ({changedFiles.length})
                   </button>
-                  <div className="flex justify-between mt-2">
-                    <button className="text-sm text-blue-600 hover:text-blue-800">Push origin</button>
-                    <button className="text-sm text-gray-600 hover:text-gray-800">Undo</button>
-                  </div>
+                  <button
+                    onClick={() => setActiveTab('history')}
+                    className={`px-3 py-1 rounded-md text-sm font-medium ${
+                      activeTab === 'history' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    History
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('editor')}
+                    className={`px-3 py-1 rounded-md text-sm font-medium ${
+                      activeTab === 'editor' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    Editor
+                  </button>
+                </div>
+                <div className="relative">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-2 top-1/2 transform -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Filter files"
+                    className="pl-8 pr-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
               </div>
 
-              {/* Diff View */}
-              <div className="flex-1 bg-gray-50 p-4">
-                <div className="bg-white border border-gray-200 rounded-lg h-full flex flex-col">
-                  <div className="p-4 border-b border-gray-200">
-                    <h4 className="text-sm font-medium text-gray-800">Claims Processing Automation Model</h4>
+              {activeTab === 'changes' && (
+                <div className="flex-1 flex">
+                  {/* File List */}
+                  <div className="w-1/2 border-r border-gray-200 bg-white flex flex-col">
+                    <div className="p-4 flex-1">
+                      <h3 className="text-sm font-medium text-gray-800 mb-3">Changed rules</h3>
+                      <div className="space-y-1">
+                        {changedFiles.map((file, index) => (
+                          <div key={index} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md cursor-pointer">
+                            {getStatusIcon(file.status)}
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-gray-800">{file.name}</div>
+                              <div className="text-xs text-gray-500">+{file.additions} -{file.deletions}</div>
+                            </div>
+                            <input type="checkbox" className="rounded border-gray-300" defaultChecked />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Commit Section */}
+                    <div className="border-t border-gray-200 p-4">
+                      <div className="mb-4">
+                        <input
+                          type="text"
+                          placeholder="Summary (required)"
+                          value={commitMessage}
+                          onChange={(e) => setCommitMessage(e.target.value)}
+                          className="w-full p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <textarea
+                          placeholder="Description"
+                          value={commitDescription}
+                          onChange={(e) => setCommitDescription(e.target.value)}
+                          rows="3"
+                          className="w-full mt-2 p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                        />
+                      </div>
+                      <button
+                        disabled={!commitMessage.trim()}
+                        className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded-md text-sm font-medium"
+                      >
+                        Commit to {currentBranch}
+                      </button>
+                      <div className="flex justify-between mt-2">
+                        <button className="text-sm text-blue-600 hover:text-blue-800">Push origin</button>
+                        <button className="text-sm text-gray-600 hover:text-gray-800">Undo</button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-4 font-mono text-sm flex-1 overflow-auto">
-                    <div className="space-y-1">
-                      <div className="flex">
-                        <div className="w-8 text-gray-400 text-right pr-2">1</div>
-                        <div className="text-gray-700">import React from 'react';</div>
+
+                  {/* Diff View */}
+                  <div className="flex-1 bg-gray-50 p-4">
+                    <div className="bg-white border border-gray-200 rounded-lg h-full flex flex-col">
+                      <div className="p-4 border-b border-gray-200">
+                        <h4 className="text-sm font-medium text-gray-800">Claims Processing Automation Model</h4>
                       </div>
-                      <div className="flex">
-                        <div className="w-8 text-gray-400 text-right pr-2">2</div>
-                        <div className="text-gray-700">import {"{ useState }"} from 'react';</div>
-                      </div>
-                      <div className="flex bg-red-50">
-                        <div className="w-8 text-red-600 text-right pr-2">-</div>
-                        <div className="text-red-800">const Header = () =&gt; {"{"}</div>
-                      </div>
-                      <div className="flex bg-green-50">
-                        <div className="w-8 text-green-600 text-right pr-2">+</div>
-                        <div className="text-green-800">const Header = ({"{ user, onLogout }"}) =&gt; {"{"}</div>
+                      <div className="p-4 font-mono text-sm flex-1 overflow-auto">
+                        <div className="space-y-1">
+                          <div className="flex">
+                            <div className="w-8 text-gray-400 text-right pr-2">1</div>
+                            <div className="text-gray-700">import React from 'react';</div>
+                          </div>
+                          <div className="flex">
+                            <div className="w-8 text-gray-400 text-right pr-2">2</div>
+                            <div className="text-gray-700">import {"{ useState }"} from 'react';</div>
+                          </div>
+                          <div className="flex bg-red-50">
+                            <div className="w-8 text-red-600 text-right pr-2">-</div>
+                            <div className="text-red-800">const Header = () =&gt; {"{"}</div>
+                          </div>
+                          <div className="flex bg-green-50">
+                            <div className="w-8 text-green-600 text-right pr-2">+</div>
+                            <div className="text-green-800">const Header = ({"{ user, onLogout }"}) =&gt; {"{"}</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
-          {activeTab === 'history' && (
-            // History View
-            <div className="flex-1 bg-white overflow-auto">
-              <div className="p-4">
-                <div className="space-y-3">
-                  {commitHistory.map((commit, index) => (
-                    <div key={index} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer">
-                      <GitCommit className="w-4 h-4 text-gray-400 mt-0.5" />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="text-sm font-medium text-gray-800">{commit.message}</span>
-                          <span className="text-xs text-gray-500 font-mono">{commit.hash}</span>
+              )}
+              {activeTab === 'history' && (
+                // History View
+                <div className="flex-1 bg-white overflow-auto">
+                  <div className="p-4">
+                    <div className="space-y-3">
+                      {commitHistory.map((commit, index) => (
+                        <div key={index} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer">
+                          <GitCommit className="w-4 h-4 text-gray-400 mt-0.5" />
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="text-sm font-medium text-gray-800">{commit.message}</span>
+                              <span className="text-xs text-gray-500 font-mono">{commit.hash}</span>
+                            </div>
+                            <div className="flex items-center space-x-4 text-xs text-gray-500">
+                              <span>{commit.author}</span>
+                              <span className="flex items-center space-x-1">
+                                <Clock className="w-3 h-3" />
+                                <span>{commit.time}</span>
+                              </span>
+                              <span className="flex items-center space-x-1">
+                                <GitBranch className="w-3 h-3" />
+                                <span>{commit.branch}</span>
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-4 text-xs text-gray-500">
-                          <span>{commit.author}</span>
-                          <span className="flex items-center space-x-1">
-                            <Clock className="w-3 h-3" />
-                            <span>{commit.time}</span>
-                          </span>
-                          <span className="flex items-center space-x-1">
-                            <GitBranch className="w-3 h-3" />
-                            <span>{commit.branch}</span>
-                          </span>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
-          {activeTab === 'editor' && (
-            <div className="flex-1 bg-white overflow-auto">
-              <div className="p-4">
-                {/* Toggle between Decision Table and DMN IDE */}
-                <div className="mb-4 flex gap-2 justify-end">
-                  <button
-                    className={`px-4 py-2 rounded-md text-sm font-medium border ${editorMode === 'table' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'}`}
-                    onClick={() => setEditorMode('table')}
-                  >
-                    Decision Table IDE
-                  </button>
-                  <button
-                    className={`px-4 py-2 rounded-md text-sm font-medium border ${editorMode === 'dmn' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'}`}
-                    onClick={() => setEditorMode('dmn')}
-                  >
-                    DMN IDE
-                  </button>
+              )}
+              {activeTab === 'editor' && (
+                <div className="flex-1 bg-white overflow-auto">
+                  <div className="p-4">
+                    {/* Toggle between Decision Table and DMN IDE */}
+                    <div className="mb-4 flex gap-2 justify-end">
+                      <button
+                        className={`px-4 py-2 rounded-md text-sm font-medium border ${editorMode === 'table' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'}`}
+                        onClick={() => setEditorMode('table')}
+                      >
+                        Decision Table IDE
+                      </button>
+                      <button
+                        className={`px-4 py-2 rounded-md text-sm font-medium border ${editorMode === 'dmn' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border-blue-600'}`}
+                        onClick={() => setEditorMode('dmn')}
+                      >
+                        DMN IDE
+                      </button>
+                    </div>
+                    {/* Render selected IDE */}
+                    {editorMode === 'table' ? <DecisionTableIDE /> : <DMNIDE />}
+                  </div>
                 </div>
-                {/* Render selected IDE */}
-                {editorMode === 'table' ? <DecisionTableIDE /> : <DMNIDE />}
-              </div>
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
