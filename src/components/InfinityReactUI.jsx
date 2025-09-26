@@ -5,16 +5,7 @@ const DATATYPES = ['String', 'Number', 'Boolean', 'Date'];
 const CONDITIONS = ['Equals', 'Greater Than', 'Less Than', 'Contains'];
 
 const DecisionTableIDE = () => {
-  // Save work in progress to localStorage
-  const saveTable = () => {
-    const tableData = {
-      title,
-      columns,
-      rows
-    };
-    localStorage.setItem('decisionTableWIP', JSON.stringify(tableData));
-    alert('Work in progress saved!');
-  };
+  // Decision Table state
   const [title, setTitle] = useState('Healthcare Claims Workflow');
   const [columns, setColumns] = useState([
     { name: 'Patient Age', type: 'Number', condition: 'Greater Than' },
@@ -30,41 +21,41 @@ const DecisionTableIDE = () => {
     [72, 2200, 'E78.5', 'Specialist', 'Approved'],
     [29, 150, 'M54.5', 'Clinic', 'Denied']
   ]);
-  // Track selected cell for navigation/editing
   const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 });
   const inputRefs = React.useRef([]);
 
-  // Add a new column
+  // Save work in progress to localStorage
+  const saveTable = () => {
+    const tableData = {
+      title,
+      columns,
+      rows
+    };
+    localStorage.setItem('decisionTableWIP', JSON.stringify(tableData));
+    alert('Work in progress saved!');
+  };
+
+  // Add/remove/update logic
   const addColumn = () => {
     setColumns([...columns, { name: `Condition ${columns.length + 1}`, type: 'String', condition: 'Equals' }]);
     setRows(rows.map(row => [...row, '']));
   };
-
-  // Remove a column
   const removeColumn = (colIdx) => {
     setColumns(columns.filter((_, idx) => idx !== colIdx));
     setRows(rows.map(row => row.filter((_, idx) => idx !== colIdx)));
   };
-
-  // Add a new row
   const addRow = () => {
     setRows([...rows, columns.map(() => '')]);
   };
-
-  // Remove a row
   const removeRow = (rowIdx) => {
     setRows(rows.filter((_, idx) => idx !== rowIdx));
   };
-
-  // Update cell value
   const updateCell = (rowIdx, colIdx, value) => {
     const newRows = rows.map((row, r) =>
       r === rowIdx ? row.map((cell, c) => (c === colIdx ? value : cell)) : row
     );
     setRows(newRows);
   };
-
-  // Handle cell navigation and editing
   const handleCellKeyDown = (e, rowIdx, colIdx) => {
     let nextRow = rowIdx;
     let nextCol = colIdx;
@@ -82,15 +73,12 @@ const DecisionTableIDE = () => {
       e.preventDefault();
     }
     setSelectedCell({ row: nextRow, col: nextCol });
-    // Focus next cell
     setTimeout(() => {
       if (inputRefs.current[nextRow] && inputRefs.current[nextRow][nextCol]) {
         inputRefs.current[nextRow][nextCol].focus();
       }
     }, 0);
   };
-
-  // Update column type/condition
   const updateColumn = (colIdx, field, value) => {
     const newCols = columns.map((col, idx) =>
       idx === colIdx ? { ...col, [field]: value } : col
@@ -98,112 +86,144 @@ const DecisionTableIDE = () => {
     setColumns(newCols);
   };
 
+  // Test area state
+  const [testInput, setTestInput] = useState('');
+  const [testResult, setTestResult] = useState(null);
+  const handleTest = () => {
+    const matchRow = rows.find(row => String(row[0]) === testInput);
+    setTestResult(matchRow || 'No match found');
+  };
+
   return (
     <div className="border rounded-lg p-6 bg-gray-50">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Decision Table IDE</h2>
-          <div className="flex gap-2">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Decision Table IDE</h2>
+            <div className="flex gap-2">
+              <button
+                className="px-4 py-2 bg-green-600 text-white rounded font-medium shadow hover:bg-green-700"
+                onClick={saveTable}
+              >
+                Save
+              </button>
+              <button
+                className="px-4 py-2 bg-purple-600 text-white rounded font-medium shadow hover:bg-purple-700 flex items-center gap-2"
+                // TODO: Add submit handler
+              >
+                <GitPullRequest className="w-5 h-5 text-white" />
+                Submit for Peer Review
+              </button>
+            </div>
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Decision Table Title</label>
+          <input
+            className="w-full border rounded px-2 py-1 text-md"
+            type="text"
+            placeholder="Enter table title..."
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+          />
+        </div>
+        <p className="text-gray-600 mb-4">Create and edit workflows for models using a decision table interface.</p>
+        <div className="mb-2 flex gap-2">
+          <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={addRow}>Add Row</button>
+          <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={addColumn}>Add Column</button>
+        </div>
+        <div className="overflow-auto">
+          <table className="min-w-full border text-sm">
+            <thead>
+              <tr>
+                <th className="border p-2 bg-gray-100 w-10 text-center">#</th>
+                {columns.map((col, colIdx) => (
+                  <th key={colIdx} className="border p-2 bg-gray-100">
+                    <input
+                      className="w-24 border rounded px-1 mb-1"
+                      value={col.name}
+                      onChange={e => updateColumn(colIdx, 'name', e.target.value)}
+                    />
+                    <div className="flex gap-1 mt-1">
+                      <select
+                        className="border rounded px-1"
+                        value={col.type}
+                        onChange={e => updateColumn(colIdx, 'type', e.target.value)}
+                      >
+                        {DATATYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                      </select>
+                      <select
+                        className="border rounded px-1"
+                        value={col.condition}
+                        onChange={e => updateColumn(colIdx, 'condition', e.target.value)}
+                      >
+                        {CONDITIONS.map(cond => <option key={cond} value={cond}>{cond}</option>)}
+                      </select>
+                    </div>
+                    <button className="mt-1 text-xs text-red-500" onClick={() => removeColumn(colIdx)}>Remove</button>
+                  </th>
+                ))}
+                <th className="border p-2 bg-gray-100">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, rowIdx) => (
+                <tr key={rowIdx}>
+                  <td className="border p-2 text-center bg-gray-50 font-semibold">{rowIdx + 1}</td>
+                  {row.map((cell, colIdx) => (
+                    <td key={colIdx} className={`border p-2 ${selectedCell.row === rowIdx && selectedCell.col === colIdx ? 'bg-blue-100 ring-2 ring-blue-400' : ''}`}
+                        onClick={() => {
+                          setSelectedCell({ row: rowIdx, col: colIdx });
+                          setTimeout(() => {
+                            if (inputRefs.current[rowIdx] && inputRefs.current[rowIdx][colIdx]) {
+                              inputRefs.current[rowIdx][colIdx].focus();
+                            }
+                          }, 0);
+                        }}>
+                      <input
+                        ref={el => {
+                          if (!inputRefs.current[rowIdx]) inputRefs.current[rowIdx] = [];
+                          inputRefs.current[rowIdx][colIdx] = el;
+                        }}
+                        className="w-full border rounded px-1 bg-transparent focus:bg-white"
+                        value={cell}
+                        onChange={e => updateCell(rowIdx, colIdx, e.target.value)}
+                        onKeyDown={e => handleCellKeyDown(e, rowIdx, colIdx)}
+                        onFocus={() => setSelectedCell({ row: rowIdx, col: colIdx })}
+                      />
+                    </td>
+                  ))}
+                  <td className="border p-2">
+                    <button className="text-xs text-red-500" onClick={() => removeRow(rowIdx)}>Remove</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Testing Area */}
+        <div className="mt-8 border-t pt-6">
+          <h3 className="text-md font-semibold mb-2">Test Decision Table</h3>
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="text"
+              className="border rounded px-2 py-1"
+              placeholder={`Enter ${columns[0]?.name || 'value'} to test`}
+              value={testInput}
+              onChange={e => setTestInput(e.target.value)}
+            />
             <button
-              className="px-4 py-2 bg-green-600 text-white rounded font-medium shadow hover:bg-green-700"
-              onClick={saveTable}
+              className="px-3 py-1 bg-blue-600 text-white rounded"
+              onClick={handleTest}
             >
-              Save
-            </button>
-            <button
-              className="px-4 py-2 bg-purple-600 text-white rounded font-medium shadow hover:bg-purple-700 flex items-center gap-2"
-              // TODO: Add submit handler
-            >
-              <GitPullRequest className="w-5 h-5 text-white" />
-              Submit for Peer Review
+              Test
             </button>
           </div>
+          {testResult && (
+            <div className="bg-gray-100 p-2 rounded text-sm">
+              <strong>Result:</strong> {Array.isArray(testResult) ? testResult.join(', ') : testResult}
+            </div>
+          )}
+        </div>
       </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Decision Table Title</label>
-        <input
-          className="w-full border rounded px-2 py-1 text-md"
-          type="text"
-          placeholder="Enter table title..."
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-        />
-      </div>
-      <p className="text-gray-600 mb-4">Create and edit workflows for models using a decision table interface.</p>
-      <div className="mb-2 flex gap-2">
-        <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={addRow}>Add Row</button>
-        <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={addColumn}>Add Column</button>
-      </div>
-      <div className="overflow-auto">
-        <table className="min-w-full border text-sm">
-          <thead>
-            <tr>
-              <th className="border p-2 bg-gray-100 w-10 text-center">#</th>
-              {columns.map((col, colIdx) => (
-                <th key={colIdx} className="border p-2 bg-gray-100">
-                  <input
-                    className="w-24 border rounded px-1 mb-1"
-                    value={col.name}
-                    onChange={e => updateColumn(colIdx, 'name', e.target.value)}
-                  />
-                  <div className="flex gap-1 mt-1">
-                    <select
-                      className="border rounded px-1"
-                      value={col.type}
-                      onChange={e => updateColumn(colIdx, 'type', e.target.value)}
-                    >
-                      {DATATYPES.map(type => <option key={type} value={type}>{type}</option>)}
-                    </select>
-                    <select
-                      className="border rounded px-1"
-                      value={col.condition}
-                      onChange={e => updateColumn(colIdx, 'condition', e.target.value)}
-                    >
-                      {CONDITIONS.map(cond => <option key={cond} value={cond}>{cond}</option>)}
-                    </select>
-                  </div>
-                  <button className="mt-1 text-xs text-red-500" onClick={() => removeColumn(colIdx)}>Remove</button>
-                </th>
-              ))}
-              <th className="border p-2 bg-gray-100">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, rowIdx) => (
-              <tr key={rowIdx}>
-                <td className="border p-2 text-center bg-gray-50 font-semibold">{rowIdx + 1}</td>
-                {row.map((cell, colIdx) => (
-                  <td key={colIdx} className={`border p-2 ${selectedCell.row === rowIdx && selectedCell.col === colIdx ? 'bg-blue-100 ring-2 ring-blue-400' : ''}`}
-                      onClick={() => {
-                        setSelectedCell({ row: rowIdx, col: colIdx });
-                        setTimeout(() => {
-                          if (inputRefs.current[rowIdx] && inputRefs.current[rowIdx][colIdx]) {
-                            inputRefs.current[rowIdx][colIdx].focus();
-                          }
-                        }, 0);
-                      }}>
-                    <input
-                      ref={el => {
-                        if (!inputRefs.current[rowIdx]) inputRefs.current[rowIdx] = [];
-                        inputRefs.current[rowIdx][colIdx] = el;
-                      }}
-                      className="w-full border rounded px-1 bg-transparent focus:bg-white"
-                      value={cell}
-                      onChange={e => updateCell(rowIdx, colIdx, e.target.value)}
-                      onKeyDown={e => handleCellKeyDown(e, rowIdx, colIdx)}
-                      onFocus={() => setSelectedCell({ row: rowIdx, col: colIdx })}
-                    />
-                  </td>
-                ))}
-                <td className="border p-2">
-                  <button className="text-xs text-red-500" onClick={() => removeRow(rowIdx)}>Remove</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+    );
 };
 
 // Stub DMN IDE
@@ -530,6 +550,6 @@ const InfinityReactUI = () => {
       </div>
     </div>
   );
-};
+}
 
 export default InfinityReactUI;
