@@ -425,7 +425,7 @@ const InfinityReactUI = () => {
             </button>
             <button className="w-full flex items-center space-x-2 p-2 text-left hover:bg-gray-200 rounded-md">
               <GitPullRequest className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-700">Create pull request</span>
+              <span className="text-sm text-gray-700">View PRs</span>
             </button>
             <button className="w-full flex items-center space-x-2 p-2 text-left hover:bg-gray-200 rounded-md">
               <RefreshCw className="w-4 h-4 text-gray-500" />
