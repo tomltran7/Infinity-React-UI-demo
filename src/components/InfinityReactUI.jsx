@@ -86,12 +86,37 @@ const DecisionTableIDE = () => {
     setColumns(newCols);
   };
 
-  // Test area state
-  const [testInput, setTestInput] = useState('');
-  const [testResult, setTestResult] = useState(null);
-  const handleTest = () => {
-    const matchRow = rows.find(row => String(row[0]) === testInput);
-    setTestResult(matchRow || 'No match found');
+  // Enhanced test suite state
+  const [testCases, setTestCases] = useState([
+    { input: '', expected: '', result: null, status: null }
+  ]);
+  const [suiteRun, setSuiteRun] = useState(false);
+
+  // Run all test cases
+  const runTestSuite = () => {
+    const updated = testCases.map(tc => {
+      const matchRow = rows.find(row => String(row[0]) === tc.input);
+      const result = matchRow ? matchRow.join(', ') : 'No match found';
+      const pass = tc.expected !== '' ? result === tc.expected : null;
+      return { ...tc, result, status: pass === null ? null : pass ? 'pass' : 'fail' };
+    });
+    setTestCases(updated);
+    setSuiteRun(true);
+  };
+
+  // Add new test case
+  const addTestCase = () => {
+    setTestCases([...testCases, { input: '', expected: '', result: null, status: null }]);
+  };
+
+  // Update test case
+  const updateTestCase = (idx, field, value) => {
+    setTestCases(testCases.map((tc, i) => i === idx ? { ...tc, [field]: value } : tc));
+  };
+
+  // Remove test case
+  const removeTestCase = (idx) => {
+    setTestCases(testCases.filter((_, i) => i !== idx));
   };
 
   return (
@@ -198,27 +223,62 @@ const DecisionTableIDE = () => {
             </tbody>
           </table>
         </div>
-        {/* Testing Area */}
+        {/* Enhanced Testing Area */}
         <div className="mt-8 border-t pt-6">
-          <h3 className="text-md font-semibold mb-2">Test Decision Table</h3>
-          <div className="flex items-center gap-2 mb-2">
-            <input
-              type="text"
-              className="border rounded px-2 py-1"
-              placeholder={`Enter ${columns[0]?.name || 'value'} to test`}
-              value={testInput}
-              onChange={e => setTestInput(e.target.value)}
-            />
-            <button
-              className="px-3 py-1 bg-blue-600 text-white rounded"
-              onClick={handleTest}
-            >
-              Test
-            </button>
+          <h3 className="text-md font-semibold mb-2">Decision Table Test Suite</h3>
+          <div className="mb-4">
+            <button className="px-3 py-1 bg-green-600 text-white rounded mr-2" onClick={addTestCase}>Add Test Case</button>
+            <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={runTestSuite}>Run All Tests</button>
           </div>
-          {testResult && (
+          <table className="min-w-full border text-sm mb-4">
+            <thead>
+              <tr>
+                <th className="border p-2 bg-gray-100">Test Input</th>
+                <th className="border p-2 bg-gray-100">Expected Output</th>
+                <th className="border p-2 bg-gray-100">Actual Result</th>
+                <th className="border p-2 bg-gray-100">Status</th>
+                <th className="border p-2 bg-gray-100">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {testCases.map((tc, idx) => (
+                <tr key={idx}>
+                  <td className="border p-2">
+                    <input
+                      type="text"
+                      className="border rounded px-2 py-1 w-full"
+                      value={tc.input}
+                      onChange={e => updateTestCase(idx, 'input', e.target.value)}
+                      placeholder={`Enter ${columns[0]?.name || 'value'}`}
+                    />
+                  </td>
+                  <td className="border p-2">
+                    <input
+                      type="text"
+                      className="border rounded px-2 py-1 w-full"
+                      value={tc.expected}
+                      onChange={e => updateTestCase(idx, 'expected', e.target.value)}
+                      placeholder="Expected output"
+                    />
+                  </td>
+                  <td className="border p-2">
+                    {suiteRun ? tc.result : <span className="text-gray-400">(run to see)</span>}
+                  </td>
+                  <td className="border p-2">
+                    {suiteRun && tc.status === 'pass' && <span className="text-green-600 font-semibold">Pass</span>}
+                    {suiteRun && tc.status === 'fail' && <span className="text-red-600 font-semibold">Fail</span>}
+                    {suiteRun && tc.status === null && <span className="text-gray-400">N/A</span>}
+                  </td>
+                  <td className="border p-2">
+                    <button className="text-xs text-red-500" onClick={() => removeTestCase(idx)}>Remove</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {suiteRun && (
             <div className="bg-gray-100 p-2 rounded text-sm">
-              <strong>Result:</strong> {Array.isArray(testResult) ? testResult.join(', ') : testResult}
+              <strong>Summary:</strong> {testCases.filter(tc => tc.status === 'pass').length} passed, {testCases.filter(tc => tc.status === 'fail').length} failed, {testCases.length} total
             </div>
           )}
         </div>
