@@ -87,18 +87,26 @@ const DecisionTableIDE = () => {
   };
 
   // Enhanced test suite state
+  // Identify input columns and output column
+  const inputColumns = columns.slice(0, columns.length - 1);
+  const outputColumn = columns[columns.length - 1]?.name || 'Approval Status';
+
+  // Test cases: each has values for each input column and expected output
   const [testCases, setTestCases] = useState([
-    { input: '', expected: '', result: null, status: null }
+    { inputs: inputColumns.map(() => ''), expected: '', result: null, status: null }
   ]);
   const [suiteRun, setSuiteRun] = useState(false);
 
   // Run all test cases
   const runTestSuite = () => {
     const updated = testCases.map(tc => {
-      const matchRow = rows.find(row => String(row[0]) === tc.input);
-      const result = matchRow ? matchRow.join(', ') : 'No match found';
-      const pass = tc.expected !== '' ? result === tc.expected : null;
-      return { ...tc, result, status: pass === null ? null : pass ? 'pass' : 'fail' };
+      // Find row that matches all input columns
+      const matchRow = rows.find(row =>
+        inputColumns.every((col, idx) => String(row[idx]) === tc.inputs[idx])
+      );
+      const actualOutput = matchRow ? matchRow[columns.length - 1] : 'No match found';
+      const pass = tc.expected !== '' ? actualOutput === tc.expected : null;
+      return { ...tc, result: actualOutput, status: pass === null ? null : pass ? 'pass' : 'fail' };
     });
     setTestCases(updated);
     setSuiteRun(true);
@@ -106,12 +114,20 @@ const DecisionTableIDE = () => {
 
   // Add new test case
   const addTestCase = () => {
-    setTestCases([...testCases, { input: '', expected: '', result: null, status: null }]);
+    setTestCases([...testCases, { inputs: inputColumns.map(() => ''), expected: '', result: null, status: null }]);
   };
 
   // Update test case
-  const updateTestCase = (idx, field, value) => {
-    setTestCases(testCases.map((tc, i) => i === idx ? { ...tc, [field]: value } : tc));
+  const updateTestCase = (idx, field, value, inputIdx) => {
+    setTestCases(testCases.map((tc, i) => {
+      if (i !== idx) return tc;
+      if (field === 'inputs') {
+        const newInputs = [...tc.inputs];
+        newInputs[inputIdx] = value;
+        return { ...tc, inputs: newInputs };
+      }
+      return { ...tc, [field]: value };
+    }));
   };
 
   // Remove test case
@@ -233,9 +249,11 @@ const DecisionTableIDE = () => {
           <table className="min-w-full border text-sm mb-4">
             <thead>
               <tr>
-                <th className="border p-2 bg-gray-100">Test Input</th>
-                <th className="border p-2 bg-gray-100">Expected Output</th>
-                <th className="border p-2 bg-gray-100">Actual Result</th>
+                {inputColumns.map((col, i) => (
+                  <th key={col.name} className="border p-2 bg-gray-100">{col.name}</th>
+                ))}
+                <th className="border p-2 bg-gray-100">Expected {outputColumn}</th>
+                <th className="border p-2 bg-gray-100">Actual {outputColumn}</th>
                 <th className="border p-2 bg-gray-100">Status</th>
                 <th className="border p-2 bg-gray-100">Actions</th>
               </tr>
@@ -243,22 +261,24 @@ const DecisionTableIDE = () => {
             <tbody>
               {testCases.map((tc, idx) => (
                 <tr key={idx}>
-                  <td className="border p-2">
-                    <input
-                      type="text"
-                      className="border rounded px-2 py-1 w-full"
-                      value={tc.input}
-                      onChange={e => updateTestCase(idx, 'input', e.target.value)}
-                      placeholder={`Enter ${columns[0]?.name || 'value'}`}
-                    />
-                  </td>
+                  {inputColumns.map((col, inputIdx) => (
+                    <td key={col.name} className="border p-2">
+                      <input
+                        type="text"
+                        className="border rounded px-2 py-1 w-full"
+                        value={tc.inputs[inputIdx]}
+                        onChange={e => updateTestCase(idx, 'inputs', e.target.value, inputIdx)}
+                        placeholder={col.name}
+                      />
+                    </td>
+                  ))}
                   <td className="border p-2">
                     <input
                       type="text"
                       className="border rounded px-2 py-1 w-full"
                       value={tc.expected}
                       onChange={e => updateTestCase(idx, 'expected', e.target.value)}
-                      placeholder="Expected output"
+                      placeholder={`Expected ${outputColumn}`}
                     />
                   </td>
                   <td className="border p-2">
