@@ -43,7 +43,7 @@ const PeerReview = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Peer Review Request(s)</h1>
-        <button className="px-4 py-2 bg-green-600 text-white rounded font-medium shadow hover:bg-green-700">New Pull Request</button>
+        <button className="px-4 py-2 bg-green-600 text-white rounded font-medium shadow hover:bg-green-700">Reassign</button>
       </div>
 
       {/* Tabs */}
@@ -78,14 +78,19 @@ const PeerReview = () => {
         ) : (
           filteredPRs.map((pr, idx) => (
             <div key={idx} className="border rounded-lg bg-white shadow-sm p-4 flex items-center justify-between hover:shadow-md">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-blue-700 text-md">{pr.title}</span>
-                  {pr.labels.map(label => (
-                    <span key={label} className="px-2 py-0.5 bg-gray-200 text-xs rounded text-gray-700">{label}</span>
-                  ))}
+              <div className="flex items-center gap-2">
+                {pr.status === 'Open' && (
+                  <input type="checkbox" className="accent-blue-600" />
+                )}
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-blue-700 text-md">{pr.title}</span>
+                    {pr.labels.map(label => (
+                      <span key={label} className="px-2 py-0.5 bg-gray-200 text-xs rounded text-gray-700">{label}</span>
+                    ))}
+                  </div>
+                  <div className="text-xs text-gray-500">{pr.repo} • {pr.author} • Updated {pr.updated}</div>
                 </div>
-                <div className="text-xs text-gray-500">{pr.repo} • {pr.author} • Updated {pr.updated}</div>
               </div>
               <span className={`px-3 py-1 rounded text-xs font-semibold ${pr.status === 'Open' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>{pr.status}</span>
             </div>

@@ -102,6 +102,7 @@ function WorklogRow({ title, author, age, status }) {
 export default function Reporting() {
   const [timeRange, setTimeRange] = useState("90d");
   const [selectedTeam, setSelectedTeam] = useState("All teams");
+  const [showThroughput, setShowThroughput] = useState(false);
 
   const heatmapMatrix = useMemo(() => {
     const rows = 12;
@@ -111,6 +112,22 @@ export default function Reporting() {
     );
     return m;
   }, []);
+
+  // Alternate chart data: Claim throughput by model
+  const modelThroughput = [
+    { week: 'W-11', ModelA: 120, ModelB: 80, ModelC: 60 },
+    { week: 'W-10', ModelA: 130, ModelB: 85, ModelC: 70 },
+    { week: 'W-9', ModelA: 140, ModelB: 90, ModelC: 75 },
+    { week: 'W-8', ModelA: 135, ModelB: 95, ModelC: 80 },
+    { week: 'W-7', ModelA: 150, ModelB: 100, ModelC: 85 },
+    { week: 'W-6', ModelA: 160, ModelB: 110, ModelC: 90 },
+    { week: 'W-5', ModelA: 155, ModelB: 115, ModelC: 95 },
+    { week: 'W-4', ModelA: 170, ModelB: 120, ModelC: 100 },
+    { week: 'W-3', ModelA: 175, ModelB: 125, ModelC: 105 },
+    { week: 'W-2', ModelA: 180, ModelB: 130, ModelC: 110 },
+    { week: 'W-1', ModelA: 185, ModelB: 135, ModelC: 115 },
+    { week: 'W-0', ModelA: 190, ModelB: 140, ModelC: 120 },
+  ];
 
   return (
     <div className="p-6 bg-slate-50 min-h-screen">
@@ -159,20 +176,43 @@ export default function Reporting() {
       {/* Middle row with overlay and worklog */}
       <div className="grid grid-cols-12 gap-4 mb-6">
         <div className="col-span-8 bg-white p-4 rounded-lg shadow-sm">
-          <h3 className="text-lg font-medium mb-2">Velocity & Quality Overlay</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-medium">
+              {showThroughput ? 'Real-Time Claim Model Performance' : 'Deployment Velocity & Quality Overlay'}
+            </h3>
+            <button
+              className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded text-sm hover:bg-indigo-200"
+              onClick={() => setShowThroughput((v) => !v)}
+            >
+              {showThroughput ? 'Velocity & Quality Overlay' : 'Claim Performance'}
+            </button>
+          </div>
           <div style={{ height: 400 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={timeSeries} margin={{ top: 10, right: 50, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
-                <Legend />
-                <Line yAxisId="left" type="monotone" dataKey="merges" stroke="#2563eb" name="PR merges" strokeWidth={2} />
-                <Line yAxisId="left" type="monotone" dataKey="deployments" stroke="#10b981" name="Deployments" strokeWidth={2} />
-                <Line yAxisId="right" type="monotone" dataKey="error_rate" stroke="#ef4444" name="Error rate (%)" strokeDasharray="4 2" />
-              </LineChart>
+              {!showThroughput ? (
+                <LineChart data={timeSeries} margin={{ top: 10, right: 50, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="week" />
+                  <YAxis yAxisId="left" />
+                  <YAxis yAxisId="right" orientation="right" />
+                  <Tooltip />
+                  <Legend />
+                  <Line yAxisId="left" type="monotone" dataKey="merges" stroke="#2563eb" name="PR merges" strokeWidth={2} />
+                  <Line yAxisId="left" type="monotone" dataKey="deployments" stroke="#10b981" name="Deployments" strokeWidth={2} />
+                  <Line yAxisId="right" type="monotone" dataKey="error_rate" stroke="#ef4444" name="Error rate (%)" strokeDasharray="4 2" />
+                </LineChart>
+              ) : (
+                <LineChart data={modelThroughput} margin={{ top: 10, right: 50, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="week" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="ModelA" stroke="#2563eb" name="Model A" strokeWidth={2} />
+                  <Line type="monotone" dataKey="ModelB" stroke="#10b981" name="Model B" strokeWidth={2} />
+                  <Line type="monotone" dataKey="ModelC" stroke="#ef4444" name="Model C" strokeWidth={2} />
+                </LineChart>
+              )}
             </ResponsiveContainer>
           </div>
         </div>
