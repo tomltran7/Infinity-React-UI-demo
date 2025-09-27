@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PeerReview from './PeerReview';
 import Reporting from './Reporting';
+import CopilotAssistant from './CopilotAssistant';
 
 // Stub Decision Table IDE
 const DATATYPES = ['String', 'Number', 'Boolean', 'Date'];
@@ -417,6 +418,18 @@ const InfinityReactUI = () => {
     }
   };
 
+  const [copilotInput, setCopilotInput] = useState("");
+  const [copilotMessages, setCopilotMessages] = useState([]);
+  const handleCopilotSend = () => {
+    if (!copilotInput.trim()) return;
+    setCopilotMessages([...copilotMessages, { role: 'user', text: copilotInput }]);
+    // Simulate Copilot response
+    setTimeout(() => {
+      setCopilotMessages(msgs => [...msgs, { role: 'copilot', text: 'This is a Copilot response to: ' + copilotInput }]);
+    }, 800);
+    setCopilotInput("");
+  };
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col font-sans">
       {/* Title Bar */}
@@ -694,8 +707,9 @@ const InfinityReactUI = () => {
                 </div>
               )}
               {activeTab === 'editor' && (
-                <div className="flex-1 bg-white overflow-auto">
-                  <div className="p-4">
+                <div className="flex-1 bg-white overflow-auto flex">
+                  {/* Main Editor Area */}
+                  <div className="flex-1 p-4">
                     {/* Toggle between Decision Table and DMN IDE */}
                     <div className="mb-4 flex gap-2 justify-end">
                       <button
@@ -713,6 +727,10 @@ const InfinityReactUI = () => {
                     </div>
                     {/* Render selected IDE */}
                     {editorMode === 'table' ? <DecisionTableIDE /> : <DMNIDE />}
+                  </div>
+                  {/* Copilot Assistant Sidebar */}
+                  <div className="w-96 min-w-80 border-l bg-gray-50 flex flex-col p-4">
+                    <CopilotAssistant />
                   </div>
                 </div>
               )}

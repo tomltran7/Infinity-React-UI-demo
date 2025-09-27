@@ -21,9 +21,9 @@ import { Clock, Activity, GitPullRequest, ServerCog, Users } from
 "lucide-react";
 
 // Single-file mock Swarmia dashboard. Uses Tailwind for styling and
-Recharts for charts.
+// Recharts for charts.
 // Replace mockData with real API calls to Swarmia / GitHub / Datadog
-where needed.
+// where needed.
 
 const kpiData = {
   deploymentFrequency: { value7d: 3, value30d: 12 },
