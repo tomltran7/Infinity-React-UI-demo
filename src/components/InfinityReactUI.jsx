@@ -355,6 +355,13 @@ import {
 } from 'lucide-react';
 
 const InfinityReactUI = () => {
+  // Destroy (delete) current model
+  const destroyModel = () => {
+    if (models.length <= 1) return; // Prevent deleting last model
+    const newModels = models.filter((_, idx) => idx !== activeModelIdx);
+    setModels(newModels);
+    setActiveModelIdx(Math.max(0, activeModelIdx - 1));
+  };
   const [activeTab, setActiveTab] = useState('changes');
   const [selectedRepo, setSelectedRepo] = useState('Likely-To-Pay-Model');
   const [repoDropdownOpen, setRepoDropdownOpen] = useState(false);
@@ -370,6 +377,50 @@ const InfinityReactUI = () => {
   const [commitDescription, setCommitDescription] = useState('');
   // Editor mode: 'table' for Decision Table IDE, 'dmn' for DMN IDE
   const [editorMode, setEditorMode] = useState('table');
+  // Models (Decision Tables)
+  const [models, setModels] = useState([
+    {
+      id: 1,
+      title: 'Healthcare Claims Workflow',
+      columns: [
+        { name: 'Patient Age', type: 'Number', condition: 'Greater Than' },
+        { name: 'Claim Amount', type: 'Number', condition: 'Greater Than' },
+        { name: 'Diagnosis Code', type: 'String', condition: 'Equals' },
+        { name: 'Provider Type', type: 'String', condition: 'Equals' },
+        { name: 'Approval Status', type: 'String', condition: 'Equals' }
+      ],
+      rows: [
+        [65, 1200, 'E11.9', 'Hospital', 'Approved'],
+        [34, 350, 'J45.909', 'Clinic', 'Denied'],
+        [50, 800, 'I10', 'Hospital', 'Pending'],
+        [72, 2200, 'E78.5', 'Specialist', 'Approved'],
+        [29, 150, 'M54.5', 'Clinic', 'Denied']
+      ]
+    }
+  ]);
+  const [activeModelIdx, setActiveModelIdx] = useState(0);
+
+  // Add new model (Decision Table)
+  const addModel = () => {
+    const newModel = {
+      id: Date.now(),
+      title: `New Decision Table`,
+      columns: [
+        { name: 'Condition 1', type: 'String', condition: 'Equals' },
+        { name: 'Result', type: 'String', condition: 'Equals' }
+      ],
+      rows: [
+        ['', '']
+      ]
+    };
+    setModels([...models, newModel]);
+    setActiveModelIdx(models.length);
+  };
+
+  // Update model (Decision Table) state
+  const updateModel = (idx, updated) => {
+    setModels(models.map((m, i) => i === idx ? { ...m, ...updated } : m));
+  };
   // Page state
   const [activePage, setActivePage] = useState('home'); // 'home', 'peerReview', 'reporting'
 
@@ -725,8 +776,42 @@ const InfinityReactUI = () => {
                         DMN IDE
                       </button>
                     </div>
-                    {/* Render selected IDE */}
-                    {editorMode === 'table' ? <DecisionTableIDE /> : <DMNIDE />}
+                    {/* Model Selector and Add Model */}
+                    {editorMode === 'table' && (
+                      <div className="mb-4 flex items-center gap-2">
+                        <span className="font-medium text-gray-700">Models:</span>
+                        <select
+                          className="border rounded px-2 py-1 text-sm"
+                          value={activeModelIdx}
+                          onChange={e => setActiveModelIdx(Number(e.target.value))}
+                        >
+                          {models.map((model, idx) => (
+                            <option key={model.id} value={idx}>{model.title}</option>
+                          ))}
+                        </select>
+                        <button
+                          className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
+                          onClick={addModel}
+                        >
+                          Add Model
+                        </button>
+                        <button
+                          className="px-3 py-1 bg-red-500 text-white rounded text-sm"
+                          onClick={destroyModel}
+                          disabled={models.length <= 1}
+                        >
+                          Destroy Model
+                        </button>
+                      </div>
+                    )}
+                    {/* Render selected IDE/model */}
+                    {editorMode === 'table' ? (
+                      <DecisionTableIDE
+                        key={models[activeModelIdx].id}
+                        {...models[activeModelIdx]}
+                        setTable={updated => updateModel(activeModelIdx, updated)}
+                      />
+                    ) : <DMNIDE />}
                   </div>
                   {/* Copilot Assistant Sidebar */}
                   <div className="w-96 min-w-80 border-l bg-gray-50 flex flex-col p-4">
