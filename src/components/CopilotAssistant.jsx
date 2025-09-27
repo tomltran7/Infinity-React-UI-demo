@@ -5,7 +5,7 @@ const CopilotAssistant = ({ onSuggestion }) => {
   const [messages, setMessages] = useState([
     {
       type: 'assistant',
-      content: "Hello! I'm your Drools assistant. I can help you write DRL rules, create DMN models, and debug your business logic. Try asking me about rule syntax or decision table best practices!"
+      content: "Hello! I'm your Infinity assistant. I can help you write Decision Table rules, create DMN models, and debug your business logic. Try asking me about rule syntax or decision table best practices!"
     }
   ]);
   const [input, setInput] = useState('');
@@ -83,7 +83,7 @@ const CopilotAssistant = ({ onSuggestion }) => {
       <div className="flex items-center justify-between p-4 border-b bg-blue-50">
         <div className="flex items-center gap-2">
           <Bot className="w-5 h-5 text-blue-600" />
-          <span className="font-medium text-blue-900">Drools Assistant</span>
+          <span className="font-medium text-blue-900">Infinity Assistant</span>
         </div>
         <button
           onClick={clearConversation}
