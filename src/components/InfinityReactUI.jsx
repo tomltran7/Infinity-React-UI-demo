@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PeerReview from './PeerReview';
 import Reporting from './Reporting';
 
@@ -327,6 +327,14 @@ import {
 const InfinityReactUI = () => {
   const [activeTab, setActiveTab] = useState('changes');
   const [selectedRepo, setSelectedRepo] = useState('Likely-To-Pay-Model');
+  const [repoDropdownOpen, setRepoDropdownOpen] = useState(false);
+  const repoList = [
+    'Likely-To-Pay-Model',
+    'Claims Processing Automation Model',
+    'Value-Based Reimbursement Model',
+    'FWA Detection Model',
+    'Provider Markets Optimizer Model'
+  ];
   const [currentBranch, setCurrentBranch] = useState('main');
   const [commitMessage, setCommitMessage] = useState('');
   const [commitDescription, setCommitDescription] = useState('');
@@ -334,6 +342,21 @@ const InfinityReactUI = () => {
   const [editorMode, setEditorMode] = useState('table');
   // Page state
   const [activePage, setActivePage] = useState('home'); // 'home', 'peerReview', 'reporting'
+
+  // Close repo dropdown on outside click
+  useEffect(() => {
+    if (!repoDropdownOpen) return;
+    function handleClick(e) {
+      const dropdown = document.querySelector('[aria-haspopup="listbox"]');
+      if (dropdown && !dropdown.contains(e.target)) {
+        setRepoDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+    };
+  }, [repoDropdownOpen]);
 
   const changedFiles = [
     { name: 'Claims Processing Automation Model', status: 'modified', additions: 12, deletions: 3 },
@@ -388,20 +411,44 @@ const InfinityReactUI = () => {
         {/* Sidebar */}
         <div className="w-64 bg-gray-100 border-r border-gray-200 flex flex-col">
           {/* Repository Selector */}
-          <div className="p-3 border-b border-gray-200">
+          <div className="p-3 border-b border-gray-200 relative">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Current Repository
               </span>
               <Plus className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer" />
             </div>
-            <button className="w-full flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+            <button
+              className="w-full flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md hover:bg-gray-50"
+              onClick={() => setRepoDropdownOpen((open) => !open)}
+              aria-haspopup="listbox"
+              aria-expanded={repoDropdownOpen}
+            >
               <div className="flex items-center space-x-2">
                 <FolderOpen className="w-4 h-4 text-gray-500" />
                 <span className="text-sm font-medium text-gray-800 truncate">{selectedRepo}</span>
               </div>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${repoDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
+            {repoDropdownOpen && (
+              <div
+                className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-10"
+                tabIndex={-1}
+              >
+                {repoList.map((repo) => (
+                  <button
+                    key={repo}
+                    className={`w-full text-left px-4 py-2 hover:bg-blue-50 ${repo === selectedRepo ? 'bg-blue-100 font-semibold' : ''}`}
+                    onClick={() => {
+                      setSelectedRepo(repo);
+                      setRepoDropdownOpen(false);
+                    }}
+                  >
+                    {repo}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Branch Selector */}
