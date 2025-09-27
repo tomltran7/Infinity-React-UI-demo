@@ -25,16 +25,16 @@ const CopilotAssistant = ({ onSuggestion }) => {
       response: "For DMN decision tables, consider these best practices:\n1. Use clear, descriptive column headers\n2. Order rules from most specific to least specific\n3. Use UNIQUE hit policy when only one rule should fire\n4. Test all possible input combinations"
     },
     {
-      trigger: ['feel', 'expression'],
-      response: "FEEL expressions in DMN support:\n- Comparison operators: >, <, >=, <=, =, !=\n- Range expressions: [18..65], (0..100)\n- List expressions: \"A\", \"B\", \"C\"\n- Boolean logic: and, or, not"
+      trigger: ['condition', 'expression'],
+      response: "Expressions in DMN support:\n- Comparison operators: >, <, >=, <=, =, !=\n- Range expressions: [18..65], (0..100)\n- List expressions: \"A\", \"B\", \"C\"\n- Boolean logic: and, or, not"
     },
     {
       trigger: ['conflict', 'overlap', 'error'],
       response: "Rule conflicts can occur when:\n1. Multiple rules have identical conditions\n2. Rules have overlapping ranges\n3. Rule ordering creates unreachable conditions\n\nUse the conflict detector to identify and resolve these issues."
     },
     {
-      trigger: ['salience', 'priority'],
-      response: "Salience controls rule execution order:\n\nrule \"High Priority Rule\"\nsalience 100\nwhen\n // conditions\nthen\n // actions\nend\n\nHigher numbers execute first. Default salience is 0."
+      trigger: ['policy', 'priority'],
+      response: "policy controls rule execution order:\n\nrule \"High Priority Rule\"\npolicy 100\nwhen\n // conditions\nthen\n // actions\nend\n\nHigher numbers execute first. Default policy is 0."
     }
   ];
 
@@ -50,13 +50,18 @@ const CopilotAssistant = ({ onSuggestion }) => {
       'I can help you with DRL rules and DMN decision tables. What specific topic would you like to explore?',
       'Try asking about rule syntax, decision table design, or conflict resolution.',
       'Would you like me to show you an example of a specific rule pattern?',
-      'I can explain FEEL expressions, salience, or help debug your rules.'
+      'I can explain expressions, policy, or help debug your rules.'
     ];
     return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
   };
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
+    if (input.trim().toLowerCase() === 'clear') {
+      clearConversation();
+      setInput('');
+      return;
+    }
     const userMessage = { type: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
     const currentInput = input;
@@ -73,7 +78,7 @@ const CopilotAssistant = ({ onSuggestion }) => {
     setMessages([
       {
         type: 'assistant',
-        content: "Hello! I'm your Drools assistant. How can I help you with your business rules today?"
+        content: "Hello! I'm your Infinity Assistant. How can I help you with your business rules today?"
       }
     ]);
   };
