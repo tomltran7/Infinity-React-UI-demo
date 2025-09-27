@@ -255,7 +255,7 @@ export default function Reporting() {
         </div>
       </div>
 
-      <footer className="mt-6 text-sm text-slate-500">Mock dashboard — data is synthetic. Connect your Swarmia, GitHub, and Datadog integrations to populate real metrics.</footer>
+      <footer className="mt-6 text-sm text-slate-500">Mock dashboard — data is synthetic.</footer>
     </div>
   );
 }
