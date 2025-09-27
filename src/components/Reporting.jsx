@@ -116,7 +116,7 @@ export default function Reporting() {
     <div className="p-6 bg-slate-50 min-h-screen">
       <header className="mb-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Reporting — Engineering Health & Model Adoption</h1>
+          <h1 className="text-2xl font-semibold">Insights — Model Health & Adoption</h1>
           <div className="flex gap-3 items-center">
             <select
               value={timeRange}

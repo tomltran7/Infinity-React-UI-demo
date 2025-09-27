@@ -95,7 +95,36 @@ const DecisionTableIDE = () => {
 
   // Test cases: each has values for each input column and expected output
   const [testCases, setTestCases] = useState([
-    { inputs: inputColumns.map(() => ''), expected: '', result: null, status: null }
+    {
+      inputs: ["65", "1200", "E11.9", "Hospital"],
+      expected: "Approved",
+      result: null,
+      status: null
+    },
+    {
+      inputs: ["34", "350", "J45.909", "Clinic"],
+      expected: "Denied",
+      result: null,
+      status: null
+    },
+    {
+      inputs: ["50", "800", "I10", "Hospital"],
+      expected: "Pending",
+      result: null,
+      status: null
+    },
+    {
+      inputs: ["72", "2200", "E78.5", "Specialist"],
+      expected: "Approved",
+      result: null,
+      status: null
+    },
+    {
+      inputs: ["29", "150", "M54.5", "Clinic"],
+      expected: "Denied",
+      result: null,
+      status: null
+    }
   ]);
   const [suiteRun, setSuiteRun] = useState(false);
 
@@ -493,7 +522,7 @@ const InfinityReactUI = () => {
               onClick={() => setActivePage('reporting')}
             >
               <BarChart2 className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-700">Reporting</span>
+              <span className="text-sm text-gray-700">Insights</span>
             </button>
           </div>
         </div>
