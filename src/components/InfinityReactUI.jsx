@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PeerReview from './PeerReview';
+import Reporting from './Reporting';
 
 // Stub Decision Table IDE
 const DATATYPES = ['String', 'Number', 'Boolean', 'Date'];
@@ -320,7 +321,7 @@ import InfinityIcon from '../assets/infinity.svg';
 import { 
   ChevronDown, Plus, RefreshCw, GitBranch, GitCommit, Clock, 
   FileText, FolderOpen, Settings, User, Search, X, AlertCircle, 
-  GitPullRequest, Download, Upload, Home 
+  GitPullRequest, Download, Upload, Home, BarChart2 
 } from 'lucide-react';
 
 const InfinityReactUI = () => {
@@ -331,8 +332,8 @@ const InfinityReactUI = () => {
   const [commitDescription, setCommitDescription] = useState('');
   // Editor mode: 'table' for Decision Table IDE, 'dmn' for DMN IDE
   const [editorMode, setEditorMode] = useState('table');
-  // Peer Review page state
-  const [showPeerReview, setShowPeerReview] = useState(false);
+  // Page state
+  const [activePage, setActivePage] = useState('home'); // 'home', 'peerReview', 'reporting'
 
   const changedFiles = [
     { name: 'Claims Processing Automation Model', status: 'modified', additions: 12, deletions: 3 },
@@ -424,18 +425,14 @@ const InfinityReactUI = () => {
           <div className="p-3 space-y-2">
             <button
               className="w-full flex items-center space-x-2 p-2 text-left hover:bg-gray-200 rounded-md"
-              onClick={() => setShowPeerReview(false)}
+              onClick={() => setActivePage('home')}
             >
               <Home className="w-4 h-4 text-gray-500" />
               <span className="text-sm text-gray-700">Home</span>
             </button>
-            <button className="w-full flex items-center space-x-2 p-2 text-left hover:bg-gray-200 rounded-md">
-              <Download className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-700">Fetch origin</span>
-            </button>
             <button
               className="w-full flex items-center space-x-2 p-2 text-left hover:bg-gray-200 rounded-md"
-              onClick={() => setShowPeerReview(true)}
+              onClick={() => setActivePage('peerReview')}
             >
               <GitPullRequest className="w-4 h-4 text-gray-500" />
               <span className="text-sm text-gray-700">View PRs</span>
@@ -444,15 +441,28 @@ const InfinityReactUI = () => {
               <RefreshCw className="w-4 h-4 text-gray-500" />
               <span className="text-sm text-gray-700">View on Bitbucket</span>
             </button>
+            <button
+              className="w-full flex items-center space-x-2 p-2 text-left hover:bg-gray-200 rounded-md"
+              onClick={() => setActivePage('reporting')}
+            >
+              <BarChart2 className="w-4 h-4 text-gray-500" />
+              <span className="text-sm text-gray-700">Reporting</span>
+            </button>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
-          {showPeerReview ? (
+          {activePage === 'peerReview' ? (
             <div className="flex-1 bg-white overflow-auto">
               <div className="p-4">
                 <PeerReview />
+              </div>
+            </div>
+          ) : activePage === 'reporting' ? (
+            <div className="flex-1 bg-white overflow-auto">
+              <div className="p-4">
+                <Reporting />
               </div>
             </div>
           ) : (

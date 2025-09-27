@@ -42,7 +42,7 @@ const PeerReview = () => {
     <div className="max-w-4xl mx-auto p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Pull Requests</h1>
+        <h1 className="text-2xl font-bold">Peer Review Request(s)</h1>
         <button className="px-4 py-2 bg-green-600 text-white rounded font-medium shadow hover:bg-green-700">New Pull Request</button>
       </div>
 
