@@ -308,15 +308,260 @@ const DecisionTableIDE = ({ title: initialTitle, columns: initialColumns, rows: 
     );
 };
 
-// Stub DMN IDE
-const DMNIDE = () => (
-  <div className="border rounded-lg p-6 bg-gray-50">
-    <h2 className="text-lg font-semibold mb-2">Decision Model Notation (DMN) IDE</h2>
-    <p className="text-gray-600 mb-4">Edit workflows using DMN notation for advanced modeling.</p>
-    {/* Add your DMN editor UI here */}
-    <div className="h-40 flex items-center justify-center text-gray-400">[DMN Editor Placeholder]</div>
-  </div>
-);
+// Fully functional DMN IDE inspired by Drools Business Central v7.69
+const DMNIDE = ({ model, setModel, logChange }) => {
+  // DMN node types
+  const NODE_TYPES = [
+    { type: 'input', label: 'Input Data', color: 'bg-blue-200' },
+    { type: 'decision', label: 'Decision', color: 'bg-green-200' },
+    { type: 'knowledge', label: 'Knowledge Source', color: 'bg-yellow-200' },
+    { type: 'output', label: 'Output', color: 'bg-purple-200' }
+  ];
+  // DMN state
+  const [nodes, setNodes] = useState(model?.dmn?.nodes || []);
+  const [edges, setEdges] = useState(model?.dmn?.edges || []);
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const [draggingNode, setDraggingNode] = useState(null);
+  const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
+  const [connectingFrom, setConnectingFrom] = useState(null);
+  const canvasRef = React.useRef(null);
+
+  // Save DMN model and log change for all models in repo
+  const saveDMN = () => {
+    if (setModel) {
+      setModel({
+        ...model,
+        dmn: { nodes, edges }
+      });
+    }
+    // DMN-specific event title
+    const dmnEvent = {
+      timestamp: new Date().toISOString(),
+      title: `[DMN Save] ${model?.repo || 'Repository'} updated`,
+      columns: [],
+      rows: [],
+      testCases: [],
+      dmn: { nodes, edges }
+    };
+    if (logChange) {
+      logChange(dmnEvent, true); // Pass a flag to indicate broadcast to all models in repo
+    }
+    alert('DMN model saved!');
+  };
+
+  // Add node from palette
+  const addNode = (type) => {
+    const newNode = {
+      id: Date.now() + Math.random(),
+      type,
+      label: NODE_TYPES.find(n => n.type === type).label,
+      x: 100 + Math.random() * 300,
+      y: 100 + Math.random() * 200,
+      properties: { name: '', description: '' }
+    };
+    setNodes([...nodes, newNode]);
+    setSelectedNodeId(newNode.id);
+  };
+
+  // Remove node and its edges
+  const removeNode = (id) => {
+    setNodes(nodes.filter(n => n.id !== id));
+    setEdges(edges.filter(e => e.from !== id && e.to !== id));
+    setSelectedNodeId(null);
+  };
+
+  // Start connecting from node
+  const startConnecting = (id) => {
+    setConnectingFrom(id);
+  };
+  // Finish connecting to node
+  const finishConnecting = (id) => {
+    if (connectingFrom && connectingFrom !== id) {
+      setEdges([...edges, { from: connectingFrom, to: id }]);
+    }
+    setConnectingFrom(null);
+  };
+
+  // Drag node
+  const handleNodeDrag = (id, dx, dy) => {
+    setNodes(nodes.map(n => n.id === id ? { ...n, x: n.x + dx, y: n.y + dy } : n));
+  };
+
+  // Update node properties
+  const updateNodeProps = (id, props) => {
+    setNodes(nodes.map(n => n.id === id ? { ...n, properties: { ...n.properties, ...props } } : n));
+  };
+
+  // Render edges as SVG lines
+  const renderEdges = () => (
+    <svg className="absolute top-0 left-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
+      {edges.map((e, idx) => {
+        const from = nodes.find(n => n.id === e.from);
+        const to = nodes.find(n => n.id === e.to);
+        if (!from || !to) return null;
+        return (
+          <line
+            key={idx}
+            x1={from.x + 60}
+            y1={from.y + 30}
+            x2={to.x + 60}
+            y2={to.y + 30}
+            stroke="#888"
+            strokeWidth={2}
+            markerEnd="url(#arrowhead)"
+          />
+        );
+      })}
+      <defs>
+        <marker id="arrowhead" markerWidth="8" markerHeight="4" refX="8" refY="2" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L8,2 L0,4" fill="#888" />
+        </marker>
+      </defs>
+    </svg>
+  );
+
+  // Render nodes on canvas
+  const renderNodes = () => (
+    nodes.map(node => {
+      const typeInfo = NODE_TYPES.find(n => n.type === node.type);
+      return (
+        <div
+          key={node.id}
+          className={`absolute cursor-move shadow-lg rounded-lg border ${typeInfo.color} ${selectedNodeId === node.id ? 'ring-2 ring-blue-500' : ''}`}
+          style={{ left: node.x, top: node.y, width: 120, height: 60, zIndex: 2 }}
+          onMouseDown={e => {
+            setDraggingNode({ id: node.id, startX: e.clientX, startY: e.clientY });
+            e.stopPropagation();
+          }}
+          onClick={e => {
+            setSelectedNodeId(node.id);
+            e.stopPropagation();
+          }}
+        >
+          <div className="flex items-center justify-between px-2 pt-2">
+            <span className="font-semibold text-xs text-gray-700">{node.label}</span>
+            <button className="text-xs text-red-500" onClick={ev => { ev.stopPropagation(); removeNode(node.id); }}>✕</button>
+          </div>
+          <div className="px-2 text-xs text-gray-600 truncate">{node.properties.name || 'Unnamed'}</div>
+          <div className="flex justify-between px-2 pt-2">
+            <button className="text-xs text-blue-600" onClick={ev => { ev.stopPropagation(); startConnecting(node.id); }}>Connect</button>
+            <button className="text-xs text-gray-500" onClick={ev => { ev.stopPropagation(); setSelectedNodeId(node.id); }}>Edit</button>
+          </div>
+        </div>
+      );
+    })
+  );
+
+  // Handle canvas mouse move for dragging
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (draggingNode) {
+        const dx = e.clientX - draggingNode.startX;
+        const dy = e.clientY - draggingNode.startY;
+        handleNodeDrag(draggingNode.id, dx, dy);
+        setDraggingNode({ ...draggingNode, startX: e.clientX, startY: e.clientY });
+      }
+    };
+    const handleMouseUp = (e) => {
+      if (draggingNode) setDraggingNode(null);
+      if (connectingFrom) {
+        // Try to connect to a node under mouse
+        const rect = canvasRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const target = nodes.find(n => x >= n.x && x <= n.x + 120 && y >= n.y && y <= n.y + 60);
+        if (target) finishConnecting(target.id);
+        else setConnectingFrom(null);
+      }
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [draggingNode, connectingFrom, nodes]);
+
+  // Sidebar for editing node properties
+  const selectedNode = nodes.find(n => n.id === selectedNodeId);
+
+  return (
+    <div className="border rounded-lg p-0 bg-gray-50 flex h-[600px]">
+      {/* Node Palette */}
+      <div className="w-48 border-r bg-white p-4 flex flex-col gap-4">
+        <h2 className="text-md font-semibold mb-2">Node Palette</h2>
+        {NODE_TYPES.map(nt => (
+          <button
+            key={nt.type}
+            className={`w-full px-3 py-2 rounded-md font-medium shadow ${nt.color} hover:ring-2 hover:ring-blue-400`}
+            onClick={() => addNode(nt.type)}
+          >
+            {nt.label}
+          </button>
+        ))}
+      </div>
+      {/* Canvas Area */}
+      <div className="flex-1 relative" ref={canvasRef} style={{ background: '#f8fafc', overflow: 'hidden' }}>
+        {/* Save Button Top Right */}
+        <button
+          className="absolute top-4 right-4 px-4 py-2 bg-green-600 text-white rounded font-medium shadow hover:bg-green-700 z-10"
+          onClick={saveDMN}
+        >
+          Save
+        </button>
+        {renderEdges()}
+        {renderNodes()}
+        {connectingFrom && (
+          <div className="absolute left-2 top-2 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs shadow">Connecting: Select target node</div>
+        )}
+      </div>
+      {/* Sidebar for node editing */}
+      <div className="w-72 border-l bg-white p-4 flex flex-col">
+        <h2 className="text-md font-semibold mb-2">Node Properties</h2>
+        {selectedNode ? (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
+              <input
+                className="w-full border rounded px-2 py-1 text-sm"
+                type="text"
+                value={selectedNode.properties.name}
+                onChange={e => updateNodeProps(selectedNode.id, { name: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                className="w-full border rounded px-2 py-1 text-sm"
+                rows={2}
+                value={selectedNode.properties.description}
+                onChange={e => updateNodeProps(selectedNode.id, { description: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Type</label>
+              <select
+                className="w-full border rounded px-2 py-1 text-sm"
+                value={selectedNode.type}
+                onChange={e => updateNodeProps(selectedNode.id, { type: e.target.value })}
+              >
+                {NODE_TYPES.map(nt => <option key={nt.type} value={nt.type}>{nt.label}</option>)}
+              </select>
+            </div>
+            <button
+              className="mt-2 px-3 py-1 bg-red-500 text-white rounded text-sm"
+              onClick={() => removeNode(selectedNode.id)}
+            >
+              Delete Node
+            </button>
+          </div>
+        ) : (
+          <div className="text-gray-500">Select a node to edit its properties.</div>
+        )}
+      </div>
+    </div>
+  );
+};
 import InfinityIcon from '../assets/infinity.svg';
 import { 
   ChevronDown, Plus, RefreshCw, GitBranch, GitCommit, Clock, 
@@ -380,10 +625,10 @@ const InfinityReactUI = () => {
     }
   }, [selectedRepo, models.length]);
 
-  const logChange = (change) => {
-    // Only update changeLog for models in current repo
+  // Enhanced logChange: if broadcast is true, log to all models in repo
+  const logChange = (change, broadcast = false) => {
     setModels(models => models.map((m, i) => {
-      if (m.repo === selectedRepo && modelsForRepo[activeModelIdx] && m.id === modelsForRepo[activeModelIdx].id) {
+      if (m.repo === selectedRepo && (broadcast || (modelsForRepo[activeModelIdx] && m.id === modelsForRepo[activeModelIdx].id))) {
         return { ...m, changeLog: [{ ...change }, ...(m.changeLog || [])] };
       }
       return m;
@@ -839,7 +1084,13 @@ const InfinityReactUI = () => {
                       />
                     ) : editorMode === 'table' ? (
                       <div className="p-8 text-gray-500">No models for this repository. Add a model to begin.</div>
-                    ) : <DMNIDE />}
+                    ) : (
+                      <DMNIDE
+                        model={modelsForRepo[activeModelIdx]}
+                        setModel={updated => updateModel(activeModelIdx, updated)}
+                        logChange={logChange}
+                      />
+                    )}
                   </div>
                   {/* Copilot Assistant Sidebar */}
                   <div className="w-96 min-w-80 border-l bg-gray-50 flex flex-col p-4">
