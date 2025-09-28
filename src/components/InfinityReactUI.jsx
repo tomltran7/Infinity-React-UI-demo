@@ -325,13 +325,7 @@ import {
 } from 'lucide-react';
 
 const InfinityReactUI = () => {
-  // Destroy (delete) current model
-  const destroyModel = () => {
-    if (models.length <= 1) return; // Prevent deleting last model
-    const newModels = models.filter((_, idx) => idx !== activeModelIdx);
-    setModels(newModels);
-    setActiveModelIdx(Math.max(0, activeModelIdx - 1));
-  };
+  // ...existing code...
   const [activeTab, setActiveTab] = useState('changes');
   const [selectedRepo, setSelectedRepo] = useState('Likely-To-Pay-Model');
   const [repoDropdownOpen, setRepoDropdownOpen] = useState(false);
@@ -374,16 +368,29 @@ const InfinityReactUI = () => {
     }
   ]);
   // Change log for each model
-  const logChange = (change) => {
-    setModels(models => models.map((m, i) =>
-      i === activeModelIdx
-        ? { ...m, changeLog: [{ ...change }, ...(m.changeLog || [])] }
-        : m
-    ));
-  };
   const [activeModelIdx, setActiveModelIdx] = useState(0);
+  // Only show models for selected repo in editor
+  const modelsForRepo = models.filter(m => m.repo === selectedRepo);
+  // When repo changes, reset activeModelIdx to 0 if needed
+  useEffect(() => {
+    if (modelsForRepo.length === 0) {
+      setActiveModelIdx(0);
+    } else if (activeModelIdx >= modelsForRepo.length) {
+      setActiveModelIdx(0);
+    }
+  }, [selectedRepo, models.length]);
 
-  // Add new model (Decision Table)
+  const logChange = (change) => {
+    // Only update changeLog for models in current repo
+    setModels(models => models.map((m, i) => {
+      if (m.repo === selectedRepo && modelsForRepo[activeModelIdx] && m.id === modelsForRepo[activeModelIdx].id) {
+        return { ...m, changeLog: [{ ...change }, ...(m.changeLog || [])] };
+      }
+      return m;
+    }));
+  };
+
+  // Add new model (Decision Table) for selected repo
   const addModel = () => {
     const newModel = {
       id: Date.now(),
@@ -398,13 +405,24 @@ const InfinityReactUI = () => {
       changeLog: []
     };
     setModels([...models, newModel]);
-    setActiveModelIdx(models.length);
+    setActiveModelIdx(modelsForRepo.length); // new model is last in filtered list
   };
 
-  // Update model (Decision Table) state
-  const updateModel = (idx, updated) => {
-    setModels(models.map((m, i) => i === idx ? { ...m, ...updated } : m));
+  // Destroy (delete) current model for selected repo
+  const destroyModel = () => {
+    if (modelsForRepo.length <= 1) return; // Prevent deleting last model in repo
+    const modelToDelete = modelsForRepo[activeModelIdx];
+    const newModels = models.filter(m => m.id !== modelToDelete.id);
+    setModels(newModels);
+    setActiveModelIdx(Math.max(0, activeModelIdx - 1));
   };
+
+  // Update model (Decision Table) state for selected repo
+  const updateModel = (idx, updated) => {
+    const modelId = modelsForRepo[idx]?.id;
+    setModels(models.map(m => m.id === modelId ? { ...m, ...updated } : m));
+  };
+
   // Page state
   const [activePage, setActivePage] = useState('home'); // 'home', 'peerReview', 'reporting'
 
@@ -785,7 +803,7 @@ const InfinityReactUI = () => {
                           value={activeModelIdx}
                           onChange={e => setActiveModelIdx(Number(e.target.value))}
                         >
-                          {models.map((model, idx) => (
+                          {modelsForRepo.map((model, idx) => (
                             <option key={model.id} value={idx}>{model.title}</option>
                           ))}
                         </select>
@@ -798,23 +816,25 @@ const InfinityReactUI = () => {
                         <button
                           className="px-3 py-1 bg-red-500 text-white rounded text-sm"
                           onClick={destroyModel}
-                          disabled={models.length <= 1}
+                          disabled={modelsForRepo.length <= 1}
                         >
                           Destroy Model
                         </button>
                       </div>
                     )}
                     {/* Render selected IDE/model */}
-                    {editorMode === 'table' ? (
+                    {editorMode === 'table' && modelsForRepo.length > 0 ? (
                       <DecisionTableIDE
-                        key={models[activeModelIdx].id}
-                        title={models[activeModelIdx].title}
-                        columns={models[activeModelIdx].columns}
-                        rows={models[activeModelIdx].rows}
-                        testCases={models[activeModelIdx].testCases}
+                        key={modelsForRepo[activeModelIdx].id}
+                        title={modelsForRepo[activeModelIdx].title}
+                        columns={modelsForRepo[activeModelIdx].columns}
+                        rows={modelsForRepo[activeModelIdx].rows}
+                        testCases={modelsForRepo[activeModelIdx].testCases}
                         setTable={updated => updateModel(activeModelIdx, updated)}
                         logChange={logChange}
                       />
+                    ) : editorMode === 'table' ? (
+                      <div className="p-8 text-gray-500">No models for this repository. Add a model to begin.</div>
                     ) : <DMNIDE />}
                   </div>
                   {/* Copilot Assistant Sidebar */}
