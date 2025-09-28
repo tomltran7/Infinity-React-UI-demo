@@ -748,15 +748,19 @@ const InfinityReactUI = () => {
                 </div>
               )}
               {activeTab === 'history' && (
-                // Model-specific History View
+                // Model-specific History View (scoped to editor selection)
                 <div className="flex-1 bg-white overflow-auto">
                   <div className="p-4">
-                    <h3 className="text-md font-semibold mb-4">Change History for: {models[activeModelIdx].title}</h3>
+                    <h3 className="text-md font-semibold mb-4">
+                      Change History for: {modelsForRepo.length > 0 ? modelsForRepo[activeModelIdx].title : 'No model selected'}
+                    </h3>
                     <div className="space-y-3">
-                      {(models[activeModelIdx].changeLog || []).length === 0 ? (
+                      {modelsForRepo.length === 0 ? (
+                        <div className="text-gray-500">No model selected for this repository.</div>
+                      ) : (modelsForRepo[activeModelIdx].changeLog || []).length === 0 ? (
                         <div className="text-gray-500">No changes have been saved for this model yet.</div>
                       ) : (
-                        models[activeModelIdx].changeLog.map((change, index) => (
+                        modelsForRepo[activeModelIdx].changeLog.map((change, index) => (
                           <div key={index} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer">
                             <GitCommit className="w-4 h-4 text-gray-400 mt-0.5" />
                             <div className="flex-1">
