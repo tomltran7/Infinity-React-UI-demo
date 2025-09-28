@@ -7,34 +7,32 @@ import CopilotAssistant from './CopilotAssistant';
 const DATATYPES = ['String', 'Number', 'Boolean', 'Date'];
 const CONDITIONS = ['Equals', 'Greater Than', 'Less Than', 'Contains'];
 
-const DecisionTableIDE = () => {
+const DecisionTableIDE = ({ title: initialTitle, columns: initialColumns, rows: initialRows, setTable, testCases: initialTestCases }) => {
   // Decision Table state
-  const [title, setTitle] = useState('Healthcare Claims Workflow');
-  const [columns, setColumns] = useState([
-    { name: 'Patient Age', type: 'Number', condition: 'Greater Than' },
-    { name: 'Claim Amount', type: 'Number', condition: 'Greater Than' },
-    { name: 'Diagnosis Code', type: 'String', condition: 'Equals' },
-    { name: 'Provider Type', type: 'String', condition: 'Equals' },
-    { name: 'Approval Status', type: 'String', condition: 'Equals' }
+  const [title, setTitle] = useState(initialTitle || 'New Decision Table');
+  const [columns, setColumns] = useState(initialColumns || [
+    { name: 'Condition 1', type: 'String', condition: 'Equals' },
+    { name: 'Result', type: 'String', condition: 'Equals' }
   ]);
-  const [rows, setRows] = useState([
-    [65, 1200, 'E11.9', 'Hospital', 'Approved'],
-    [34, 350, 'J45.909', 'Clinic', 'Denied'],
-    [50, 800, 'I10', 'Hospital', 'Pending'],
-    [72, 2200, 'E78.5', 'Specialist', 'Approved'],
-    [29, 150, 'M54.5', 'Clinic', 'Denied']
-  ]);
+  const [rows, setRows] = useState(initialRows || [['', '']]);
   const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 });
   const inputRefs = React.useRef([]);
 
-  // Save work in progress to localStorage
+  // Test suite state
+  const [testCases, setTestCases] = useState(initialTestCases || []);
+  const [suiteRun, setSuiteRun] = useState(false);
+
+  // Save work in progress and update model title
   const saveTable = () => {
-    const tableData = {
-      title,
-      columns,
-      rows
-    };
-    localStorage.setItem('decisionTableWIP', JSON.stringify(tableData));
+    if (setTable) {
+      setTable({
+        title,
+        columns,
+        rows,
+        testCases
+      });
+    }
+    localStorage.setItem('decisionTableWIP', JSON.stringify({ title, columns, rows, testCases }));
     alert('Work in progress saved!');
   };
 
@@ -89,50 +87,13 @@ const DecisionTableIDE = () => {
     setColumns(newCols);
   };
 
-  // Enhanced test suite state
-  // Identify input columns and output column
+  // Enhanced test suite logic
   const inputColumns = columns.slice(0, columns.length - 1);
-  const outputColumn = columns[columns.length - 1]?.name || 'Approval Status';
-
-  // Test cases: each has values for each input column and expected output
-  const [testCases, setTestCases] = useState([
-    {
-      inputs: ["65", "1200", "E11.9", "Hospital"],
-      expected: "Approved",
-      result: null,
-      status: null
-    },
-    {
-      inputs: ["34", "350", "J45.909", "Clinic"],
-      expected: "Denied",
-      result: null,
-      status: null
-    },
-    {
-      inputs: ["50", "800", "I10", "Hospital"],
-      expected: "Pending",
-      result: null,
-      status: null
-    },
-    {
-      inputs: ["72", "2200", "E78.5", "Specialist"],
-      expected: "Approved",
-      result: null,
-      status: null
-    },
-    {
-      inputs: ["29", "150", "M54.5", "Clinic"],
-      expected: "Denied",
-      result: null,
-      status: null
-    }
-  ]);
-  const [suiteRun, setSuiteRun] = useState(false);
+  const outputColumn = columns[columns.length - 1]?.name || 'Result';
 
   // Run all test cases
   const runTestSuite = () => {
     const updated = testCases.map(tc => {
-      // Find row that matches all input columns
       const matchRow = rows.find(row =>
         inputColumns.every((col, idx) => String(row[idx]) === tc.inputs[idx])
       );
@@ -409,9 +370,8 @@ const InfinityReactUI = () => {
         { name: 'Condition 1', type: 'String', condition: 'Equals' },
         { name: 'Result', type: 'String', condition: 'Equals' }
       ],
-      rows: [
-        ['', '']
-      ]
+      rows: [['', '']],
+      testCases: []
     };
     setModels([...models, newModel]);
     setActiveModelIdx(models.length);
@@ -808,7 +768,10 @@ const InfinityReactUI = () => {
                     {editorMode === 'table' ? (
                       <DecisionTableIDE
                         key={models[activeModelIdx].id}
-                        {...models[activeModelIdx]}
+                        title={models[activeModelIdx].title}
+                        columns={models[activeModelIdx].columns}
+                        rows={models[activeModelIdx].rows}
+                        testCases={models[activeModelIdx].testCases}
                         setTable={updated => updateModel(activeModelIdx, updated)}
                       />
                     ) : <DMNIDE />}
