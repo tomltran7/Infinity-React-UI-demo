@@ -758,7 +758,7 @@ const InfinityReactUI = () => {
             >
               <div className="flex items-center space-x-2">
                 <FolderOpen className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-800 truncate">{selectedRepo}</span>
+                <span className="text-sm font-medium text-gray-800 truncate max-w-[160px]" title={selectedRepo}>{selectedRepo}</span>
               </div>
               <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${repoDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -788,7 +788,7 @@ const InfinityReactUI = () => {
                       }}
                     >
                       <FolderOpen className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm font-medium text-gray-800 truncate">{repo}</span>
+                      <span className="text-sm font-medium text-gray-800 truncate max-w-[160px]" title={repo}>{repo}</span>
                     </button>
                   ))}
                   {filteredRepos.length === 0 && (
