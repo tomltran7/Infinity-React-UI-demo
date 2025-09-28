@@ -7,7 +7,7 @@ import CopilotAssistant from './CopilotAssistant';
 const DATATYPES = ['String', 'Number', 'Boolean', 'Date'];
 const CONDITIONS = ['Equals', 'Greater Than', 'Less Than', 'Contains'];
 
-const DecisionTableIDE = ({ title: initialTitle, columns: initialColumns, rows: initialRows, setTable, testCases: initialTestCases }) => {
+const DecisionTableIDE = ({ title: initialTitle, columns: initialColumns, rows: initialRows, setTable, testCases: initialTestCases, logChange }) => {
   // Decision Table state
   const [title, setTitle] = useState(initialTitle || 'New Decision Table');
   const [columns, setColumns] = useState(initialColumns || [
@@ -26,6 +26,15 @@ const DecisionTableIDE = ({ title: initialTitle, columns: initialColumns, rows: 
   const saveTable = () => {
     if (setTable) {
       setTable({
+        title,
+        columns,
+        rows,
+        testCases
+      });
+    }
+    if (logChange) {
+      logChange({
+        timestamp: new Date().toISOString(),
         title,
         columns,
         rows,
@@ -356,9 +365,19 @@ const InfinityReactUI = () => {
         [50, 800, 'I10', 'Hospital', 'Pending'],
         [72, 2200, 'E78.5', 'Specialist', 'Approved'],
         [29, 150, 'M54.5', 'Clinic', 'Denied']
-      ]
+      ],
+      testCases: [],
+      changeLog: []
     }
   ]);
+  // Change log for each model
+  const logChange = (change) => {
+    setModels(models => models.map((m, i) =>
+      i === activeModelIdx
+        ? { ...m, changeLog: [{ ...change }, ...(m.changeLog || [])] }
+        : m
+    ));
+  };
   const [activeModelIdx, setActiveModelIdx] = useState(0);
 
   // Add new model (Decision Table)
@@ -687,32 +706,29 @@ const InfinityReactUI = () => {
                 </div>
               )}
               {activeTab === 'history' && (
-                // History View
+                // Model-specific History View
                 <div className="flex-1 bg-white overflow-auto">
                   <div className="p-4">
+                    <h3 className="text-md font-semibold mb-4">Change History for: {models[activeModelIdx].title}</h3>
                     <div className="space-y-3">
-                      {commitHistory.map((commit, index) => (
-                        <div key={index} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer">
-                          <GitCommit className="w-4 h-4 text-gray-400 mt-0.5" />
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <span className="text-sm font-medium text-gray-800">{commit.message}</span>
-                              <span className="text-xs text-gray-500 font-mono">{commit.hash}</span>
-                            </div>
-                            <div className="flex items-center space-x-4 text-xs text-gray-500">
-                              <span>{commit.author}</span>
-                              <span className="flex items-center space-x-1">
-                                <Clock className="w-3 h-3" />
-                                <span>{commit.time}</span>
-                              </span>
-                              <span className="flex items-center space-x-1">
-                                <GitBranch className="w-3 h-3" />
-                                <span>{commit.branch}</span>
-                              </span>
+                      {(models[activeModelIdx].changeLog || []).length === 0 ? (
+                        <div className="text-gray-500">No changes have been saved for this model yet.</div>
+                      ) : (
+                        models[activeModelIdx].changeLog.map((change, index) => (
+                          <div key={index} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer">
+                            <GitCommit className="w-4 h-4 text-gray-400 mt-0.5" />
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="text-sm font-medium text-gray-800">{change.title}</span>
+                                <span className="text-xs text-gray-500 font-mono">{new Date(change.timestamp).toLocaleString()}</span>
+                              </div>
+                              <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                <span>Columns: {change.columns.length}, Rows: {change.rows.length}, Test Cases: {change.testCases ? change.testCases.length : 0}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -773,6 +789,7 @@ const InfinityReactUI = () => {
                         rows={models[activeModelIdx].rows}
                         testCases={models[activeModelIdx].testCases}
                         setTable={updated => updateModel(activeModelIdx, updated)}
+                        logChange={logChange}
                       />
                     ) : <DMNIDE />}
                   </div>
