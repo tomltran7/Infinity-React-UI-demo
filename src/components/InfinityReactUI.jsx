@@ -347,11 +347,12 @@ const InfinityReactUI = () => {
   const [commitDescription, setCommitDescription] = useState('');
   // Editor mode: 'table' for Decision Table IDE, 'dmn' for DMN IDE
   const [editorMode, setEditorMode] = useState('table');
-  // Models (Decision Tables)
+  // Models (Decision Tables) with repo property
   const [models, setModels] = useState([
     {
       id: 1,
       title: 'Healthcare Claims Workflow',
+      repo: 'Likely-To-Pay-Model',
       columns: [
         { name: 'Patient Age', type: 'Number', condition: 'Greater Than' },
         { name: 'Claim Amount', type: 'Number', condition: 'Greater Than' },
@@ -385,12 +386,14 @@ const InfinityReactUI = () => {
     const newModel = {
       id: Date.now(),
       title: `New Decision Table`,
+      repo: selectedRepo,
       columns: [
         { name: 'Condition 1', type: 'String', condition: 'Equals' },
         { name: 'Result', type: 'String', condition: 'Equals' }
       ],
       rows: [['', '']],
-      testCases: []
+      testCases: [],
+      changeLog: []
     };
     setModels([...models, newModel]);
     setActiveModelIdx(models.length);
@@ -418,12 +421,8 @@ const InfinityReactUI = () => {
     };
   }, [repoDropdownOpen]);
 
-  const changedFiles = [
-    { name: 'Claims Processing Automation Model', status: 'modified', additions: 12, deletions: 3 },
-    { name: 'Value-Based Reimbursement Model', status: 'modified', additions: 8, deletions: 2 },
-    { name: 'FWA Detection Model', status: 'modified', additions: 1, deletions: 0 },
-    { name: 'Provider Markets Optimizer Model', status: 'added', additions: 45, deletions: 0 }
-  ];
+  // Filter models changed/added in selected repo
+  const changedModels = models.filter(m => m.repo === selectedRepo && (m.changeLog.length > 0 || m.title.startsWith('New Decision Table')));
 
   const commitHistory = [
     { hash: 'a1b2c3d', message: 'Add authentication system', author: 'Tom Tran', time: '2 hours ago', branch: 'main' },
@@ -595,7 +594,7 @@ const InfinityReactUI = () => {
                       activeTab === 'changes' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    Changes ({changedFiles.length})
+                    Changes ({changedModels.length})
                   </button>
                   <button
                     onClick={() => setActiveTab('history')}
@@ -629,18 +628,29 @@ const InfinityReactUI = () => {
                   {/* File List */}
                   <div className="w-1/2 border-r border-gray-200 bg-white flex flex-col">
                     <div className="p-4 flex-1">
-                      <h3 className="text-sm font-medium text-gray-800 mb-3">Changed rules</h3>
+                      <h3 className="text-sm font-medium text-gray-800 mb-3">Changed rules in {selectedRepo}</h3>
                       <div className="space-y-1">
-                        {changedFiles.map((file, index) => (
-                          <div key={index} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md cursor-pointer">
-                            {getStatusIcon(file.status)}
-                            <div className="flex-1">
-                              <div className="text-sm font-medium text-gray-800">{file.name}</div>
-                              <div className="text-xs text-gray-500">+{file.additions} -{file.deletions}</div>
-                            </div>
-                            <input type="checkbox" className="rounded border-gray-300" defaultChecked />
-                          </div>
-                        ))}
+                        {changedModels.length === 0 ? (
+                          <div className="text-gray-500">No models changed or added in this repo.</div>
+                        ) : (
+                          changedModels.map((model, index) => {
+                            // Determine status: 'added' if no changeLog, 'modified' if changeLog exists
+                            const status = model.changeLog.length > 0 ? 'modified' : 'added';
+                            // Additions/deletions: use changeLog length as a proxy
+                            const additions = model.changeLog.length;
+                            const deletions = 0;
+                            return (
+                              <div key={model.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md cursor-pointer">
+                                {getStatusIcon(status)}
+                                <div className="flex-1">
+                                  <div className="text-sm font-medium text-gray-800">{model.title}</div>
+                                  <div className="text-xs text-gray-500">+{additions} -{deletions}</div>
+                                </div>
+                                <input type="checkbox" className="rounded border-gray-300" defaultChecked />
+                              </div>
+                            );
+                          })
+                        )}
                       </div>
                     </div>
 
