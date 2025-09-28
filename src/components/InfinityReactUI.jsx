@@ -575,14 +575,16 @@ const InfinityReactUI = () => {
   const [selectedRepo, setSelectedRepo] = useState('Likely-To-Pay-Model');
   const [repoDropdownOpen, setRepoDropdownOpen] = useState(false);
   const [repoSearchQuery, setRepoSearchQuery] = useState('');
-  const repoList = [
+  const [repoList, setRepoList] = useState([
     'Likely-To-Pay-Model',
     'Claims Processing Automation Model',
     'Value-Based Reimbursement Model',
     'FWA Detection Model',
     'Provider Markets Optimizer Model'
-  ];
+  ]);
   const filteredRepos = repoList.filter(repo => repo.toLowerCase().includes(repoSearchQuery.toLowerCase()));
+  const [showAddRepo, setShowAddRepo] = useState(false);
+  const [newRepoName, setNewRepoName] = useState('');
   const [currentBranch, setCurrentBranch] = useState('main');
   const [commitMessage, setCommitMessage] = useState('');
   const [commitDescription, setCommitDescription] = useState('');
@@ -748,7 +750,7 @@ const InfinityReactUI = () => {
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Current Repository
               </span>
-              <Plus className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer" />
+              <Plus className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer" onClick={() => setShowAddRepo(show => !show)} />
             </div>
             <button
               className="w-full flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md hover:bg-gray-50"
@@ -762,6 +764,32 @@ const InfinityReactUI = () => {
               </div>
               <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${repoDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
+            {showAddRepo && (
+              <div className="mt-2 flex flex-col gap-2">
+                <input
+                  type="text"
+                  className="border rounded px-2 py-1 text-sm"
+                  placeholder="New repository name"
+                  value={newRepoName}
+                  onChange={e => setNewRepoName(e.target.value)}
+                />
+                <button
+                  className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
+                  disabled={!newRepoName.trim() || repoList.includes(newRepoName.trim())}
+                  onClick={() => {
+                    const name = newRepoName.trim();
+                    if (name && !repoList.includes(name)) {
+                      setRepoList(list => [...list, name]);
+                      setSelectedRepo(name);
+                      setShowAddRepo(false);
+                      setNewRepoName('');
+                    }
+                  }}
+                >
+                  Add Repository
+                </button>
+              </div>
+            )}
             {repoDropdownOpen && (
               <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-10 max-h-80 overflow-auto">
                 <div className="p-3 border-b border-gray-100">
