@@ -96,7 +96,7 @@ export default function PeerReviewActivityTracker() {
       </header>
 
       <main className="grid grid-cols-12 gap-6">
-        {/* Repositories, Quick Actions, Schedules */}
+        {/* Repositories, Schedules */}
         <section className="col-span-3">
           <Card>
             <CardHeader>
@@ -120,18 +120,6 @@ export default function PeerReviewActivityTracker() {
                     </div>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-2">
-                <Button onClick={() => { alert('Open sensors view (not implemented in mock)'); }}>View Sensors</Button>
-                <Button onClick={() => { alert('Open workspace'); }}>Open Workspace</Button>
               </div>
             </CardContent>
           </Card>
@@ -242,14 +230,18 @@ export default function PeerReviewActivityTracker() {
               <CardContent>
                 {selectedRepository ? (
                   <div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div>
                         <div className="text-lg font-semibold">{selectedRepository.name}</div>
                         <div className="text-sm text-gray-500">id: {selectedRepository.id}</div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button className="flex items-center gap-2" onClick={() => {}}><Play size={14} className="mr-1" /> <span>Launch</span></Button>
-                        <Button className="flex items-center gap-2" onClick={() => alert('Open repository definition in Dagit')}><GitPullRequest size={14} className="mr-1" /> <span>Open in Dagit</span></Button>
+                      <div className="flex flex-row gap-3">
+                        <Button className="flex items-center gap-2 min-w-fit whitespace-nowrap px-3 py-2" onClick={() => {}}>
+                          <Play size={14} className="mr-1" /> <span>Launch</span>
+                        </Button>
+                        <Button className="flex items-center gap-2 min-w-fit whitespace-nowrap px-3 py-2" onClick={() => alert('Open repository definition in Dagit')}>
+                          <GitPullRequest size={14} className="mr-1" /> <span>Open in Dagit</span>
+                        </Button>
                       </div>
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-4">
@@ -328,6 +320,18 @@ export default function PeerReviewActivityTracker() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-2">
+                <Button onClick={() => { alert('Open sensors view (not implemented in mock)'); }}>View Sensors</Button>
+                <Button onClick={() => { alert('Open workspace'); }}>Open Workspace</Button>
               </div>
             </CardContent>
           </Card>
