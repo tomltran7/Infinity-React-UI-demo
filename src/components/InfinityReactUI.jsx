@@ -599,6 +599,38 @@ const InfinityReactUI = () => {
   const [editorMode, setEditorMode] = useState('table');
   // Models (Decision Tables) with repo property
   const [models, setModels] = useState([
+    // Mock change for Authorization Indicator Check
+    {
+      id: 100,
+      title: 'Authorization Indicator Check',
+      repo: 'Authorization_CSBD_DMN',
+      columns: [
+        { name: 'Authorization Indicator', type: 'String', condition: 'Equals' },
+        { name: 'UM Core Edit', type: 'Boolean', condition: 'Equals' },
+        { name: 'Result', type: 'String', condition: 'Equals' }
+      ],
+      rows: [
+        ['Y', 'TRUE', 'Proceed to Claim Level Bypass Check'],
+        ['-', '-', 'No action specified'],
+      ],
+      testCases: [],
+      changeLog: [
+        {
+          timestamp: '2025-09-29T09:00:00Z',
+          title: 'Change: Updated UM Core Edit for Authorization Indicator',
+          columns: [
+            { name: 'Authorization Indicator', type: 'String', condition: 'Equals' },
+            { name: 'UM Core Edit', type: 'Boolean', condition: 'Equals' },
+            { name: 'Result', type: 'String', condition: 'Equals' }
+          ],
+          rows: [
+            ['Y', 'TRUE', 'Proceed to Claim Level Bypass Check'],
+            ['-', '-', 'No action specified'],
+          ],
+          testCases: []
+        }
+      ]
+    },
     {
       id: 1,
       title: 'Authorization Indicator Check',
@@ -1055,7 +1087,9 @@ const InfinityReactUI = () => {
                   <div className="flex-1 bg-gray-50 p-4">
                     <div className="bg-white border border-gray-200 rounded-lg h-full flex flex-col">
                       <div className="p-4 border-b border-gray-200">
-                        <h4 className="text-sm font-medium text-gray-800">Claims Processing Automation Model</h4>
+                        <h4 className="text-sm font-medium text-gray-800">
+                          {changedModels.length > 0 ? changedModels[0].title : 'No model selected'}
+                        </h4>
                       </div>
                       <div className="p-4 font-mono text-sm flex-1 overflow-auto">
                         <div className="space-y-1">
