@@ -179,28 +179,30 @@ const DecisionTableIDE = ({ title: initialTitle, columns: initialColumns, rows: 
                 <th className="border p-2 bg-gray-100 w-10 text-center">#</th>
                 {columns.map((col, colIdx) => (
                   <th key={colIdx} className="border p-2 bg-gray-100">
-                    <input
-                      className="w-24 border rounded px-1 mb-1"
-                      value={col.name}
-                      onChange={e => updateColumn(colIdx, 'name', e.target.value)}
-                    />
-                    <div className="flex gap-1 mt-1">
-                      <select
-                        className="border rounded px-1"
-                        value={col.type}
-                        onChange={e => updateColumn(colIdx, 'type', e.target.value)}
-                      >
-                        {DATATYPES.map(type => <option key={type} value={type}>{type}</option>)}
-                      </select>
-                      <select
-                        className="border rounded px-1"
-                        value={col.condition}
-                        onChange={e => updateColumn(colIdx, 'condition', e.target.value)}
-                      >
-                        {CONDITIONS.map(cond => <option key={cond} value={cond}>{cond}</option>)}
-                      </select>
+                    <div className="flex flex-col items-center justify-center">
+                      <input
+                        className="w-24 border rounded px-1 mb-1 text-center"
+                        value={col.name}
+                        onChange={e => updateColumn(colIdx, 'name', e.target.value)}
+                      />
+                      <div className="flex gap-1 mt-1 justify-center items-center">
+                        <select
+                          className="border rounded px-1 text-center"
+                          value={col.type}
+                          onChange={e => updateColumn(colIdx, 'type', e.target.value)}
+                        >
+                          {DATATYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                        </select>
+                        <select
+                          className="border rounded px-1 text-center"
+                          value={col.condition}
+                          onChange={e => updateColumn(colIdx, 'condition', e.target.value)}
+                        >
+                          {CONDITIONS.map(cond => <option key={cond} value={cond}>{cond}</option>)}
+                        </select>
+                      </div>
+                      <button className="mt-1 text-xs text-red-500" onClick={() => removeColumn(colIdx)}>Remove</button>
                     </div>
-                    <button className="mt-1 text-xs text-red-500" onClick={() => removeColumn(colIdx)}>Remove</button>
                   </th>
                 ))}
                 <th className="border p-2 bg-gray-100">Actions</th>
