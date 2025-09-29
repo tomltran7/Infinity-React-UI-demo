@@ -2,26 +2,26 @@ import React from 'react';
 
 const PRS = [
   {
-    title: 'Add authentication system',
+    title: 'Added New Auth Indicator',
     status: 'Open',
     author: 'Tom Tran',
-    repo: 'Likely-To-Pay-Model',
+    repo: 'Authorization CSBD',
     updated: '2 hours ago',
     labels: ['feature'],
   },
   {
-    title: 'Update header styling and responsive design',
+    title: 'Updated Rule 1 - Review Authorization Case Type',
     status: 'Closed',
     author: 'Jane Smith',
-    repo: 'Value-Based Reimbursement Model',
+    repo: 'Authorization GBD',
     updated: '5 hours ago',
     labels: ['ui', 'design'],
   },
   {
-    title: 'Fix API endpoint URLs',
+    title: 'Updated Bypass Node',
     status: 'Open',
     author: 'John Doe',
-    repo: 'FWA Detection Model',
+    repo: 'Deny',
     updated: '1 day ago',
     labels: ['bug'],
   },

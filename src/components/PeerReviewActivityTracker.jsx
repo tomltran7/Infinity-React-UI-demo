@@ -6,18 +6,20 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recha
 
 // Mock data
 const MOCK_REPOSITORIES = [
-  { id: 'r1', name: 'daily_ingest' },
-  { id: 'r2', name: 'transform_users' },
-  { id: 'r3', name: 'train_model' },
+  { id: 'r1', name: 'Authorization_CSBD_DMN' },
+  { id: 'r2', name: 'Authorization_GBD_DMN' },
+  { id: 'r3', name: 'Deny' },
 ];
 const MOCK_RUNS = [
-  { id: 'r1', status: 'SUCCESS', startTime: Date.now() - 1000 * 60 * 60, endTime: Date.now() - 1000 * 60 * 30, pipelineName: 'daily_ingest', needsReview: false, reviewStatus: 'approved', reviewer: 'alice@company.com' },
-  { id: 'r2', status: 'FAILED', startTime: Date.now() - 1000 * 60 * 120, endTime: Date.now() - 1000 * 60 * 110, pipelineName: 'transform_users', needsReview: false, reviewStatus: null, reviewer: null },
-  { id: 'r3', status: 'STARTED', startTime: Date.now() - 1000 * 60 * 5, endTime: null, pipelineName: 'train_model', needsReview: true, reviewStatus: null, reviewer: null },
+  { id: 'r1', status: 'SUCCESS', startTime: Date.now() - 1000 * 60 * 60, endTime: Date.now() - 1000 * 60 * 30, pipelineName: 'Authorization_CSBD_DMN', needsReview: false, reviewStatus: 'approved', reviewer: 'alice@company.com' },
+  { id: 'r2', status: 'FAILED', startTime: Date.now() - 1000 * 60 * 120, endTime: Date.now() - 1000 * 60 * 110, pipelineName: 'Authorization_GBD_DMN', needsReview: false, reviewStatus: null, reviewer: null },
+  { id: 'r3', status: 'STARTED', startTime: Date.now() - 1000 * 60 * 5, endTime: null, pipelineName: 'Deny', needsReview: true, reviewStatus: null, reviewer: null },
 ];
 const MOCK_SCHEDULES = [
-  { name: 'daily', cronSchedule: '0 0 * * *', pipelineName: 'daily_ingest', isStopped: false },
-  { name: 'weekly', cronSchedule: '0 0 * * 0', pipelineName: 'transform_users', isStopped: true },
+  { name: 'daily', cronSchedule: '0 0 * * *', pipelineName: 'Authorization_CSBD_DMN', isStopped: false },
+  { name: 'weekly', cronSchedule: '0 0 * * 0', pipelineName: 'Authorization_GBD_DMN', isStopped: true },
+  { name: 'monthly', cronSchedule: '0 0 1 * *', pipelineName: 'Deny', isStopped: false },
+  { name: 'hourly', cronSchedule: '0 * * * *', pipelineName: 'Authorization_CSBD_DMN', isStopped: false },
 ];
 
 export default function PeerReviewActivityTracker() {
@@ -57,7 +59,7 @@ export default function PeerReviewActivityTracker() {
     const base = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ml-2';
     if (run.reviewStatus === 'approved') return <span className={`${base} bg-green-100 text-green-800`}>✓ Approved</span>;
     if (run.reviewStatus === 'denied') return <span className={`${base} bg-red-100 text-red-800`}>✗ Denied</span>;
-    return <span className={`${base} bg-blue-100 text-blue-800`}>⏳ Pending Review</span>;
+    return <span className={`${base} bg-blue-100 text-blue-800`}>Pending Review</span>;
   }
   function handleReviewAction(runId, action, feedback = '') {
     const updatedRuns = runs.map(run => {
@@ -207,7 +209,7 @@ export default function PeerReviewActivityTracker() {
           </Card>
 
           <div className="mt-4 grid grid-cols-2 gap-4">
-            <Card>
+            <Card className="col-span-2">
               <CardHeader>
                 <CardTitle>Run Durations (seconds)</CardTitle>
               </CardHeader>
@@ -220,38 +222,6 @@ export default function PeerReviewActivityTracker() {
                     <Bar dataKey="duration" />
                   </BarChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Selected Repository</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {selectedRepository ? (
-                  <div>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      <div>
-                        <div className="text-lg font-semibold">{selectedRepository.name}</div>
-                        <div className="text-sm text-gray-500">id: {selectedRepository.id}</div>
-                      </div>
-                      <div className="flex flex-row gap-3">
-                        <Button className="flex items-center gap-2 min-w-fit whitespace-nowrap px-3 py-2" onClick={() => {}}>
-                          <Play size={14} className="mr-1" /> <span>Launch</span>
-                        </Button>
-                        <Button className="flex items-center gap-2 min-w-fit whitespace-nowrap px-3 py-2" onClick={() => alert('Open repository definition in Dagit')}>
-                          <GitPullRequest size={14} className="mr-1" /> <span>Open in Dagit</span>
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-white rounded-md shadow-sm">Description: <em>Not available in mock</em></div>
-                      <div className="p-3 bg-white rounded-md shadow-sm">Modes: <em>default</em></div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-sm text-gray-600">No repository selected.</div>
-                )}
               </CardContent>
             </Card>
           </div>
@@ -319,6 +289,15 @@ export default function PeerReviewActivityTracker() {
                       )}
                     </div>
                   ))}
+                  {/* Additional static Recent Review entry for demonstration */}
+                  <div className="p-2 border rounded text-xs bg-white">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium">Authorization_GBD_DMN</span>
+                      <span className="text-green-600">✓Approved</span>
+                    </div>
+                    <div className="text-gray-500">by jane.smith@company.com • 9/28/2025</div>
+                    <div className="mt-1 p-1 bg-gray-50 rounded text-gray-700">"Reviewed and approved for deployment."</div>
+                  </div>
                 </div>
               </div>
             </CardContent>
