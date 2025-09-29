@@ -336,28 +336,33 @@ export default function PeerReviewActivityTracker() {
             </CardContent>
           </Card>
 
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle>Live Logs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="text-sm">Selected run:</div>
-                <div className="font-medium">{selectedRun ? selectedRun.id : '—'}</div>
-                <Button className="flex items-center gap-2" onClick={() => { setSelectedRun(null); setLogs([]); }}><RefreshCw size={14} className="mr-1" /> <span>Clear</span></Button>
-              </div>
-              <div id="run-logs-scroll" style={{ maxHeight: 320, overflow: 'auto', background: '#0f172a', color: '#e6eef8', padding: 8, borderRadius: 6 }}>
-                {logs.length === 0 && <div className="text-xs text-gray-400">No logs yet.</div>}
-                {logs.map((m, i) => (
-                  <div key={i} style={{ fontFamily: 'monospace', fontSize: 12, marginBottom: 6 }}>[{m.level || 'INFO'}] {m.timestamp ? new Date(m.timestamp).toLocaleTimeString() : ''} — {m.text}</div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Live Logs removed from main grid; now only in second grid below */}
 
           {error && <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md shadow">Error: {String(error)}</div>}
         </section>
       </main>
+
+      {/* Second grid with one column for Live Logs */}
+      <div className="grid grid-cols-1 gap-6 mt-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Live Logs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="text-sm">Selected run:</div>
+              <div className="font-medium">{selectedRun ? selectedRun.id : '—'}</div>
+              <Button className="flex items-center gap-2" onClick={() => { setSelectedRun(null); setLogs([]); }}><RefreshCw size={14} className="mr-1" /> <span>Clear</span></Button>
+            </div>
+            <div id="run-logs-scroll-2" style={{ maxHeight: 320, overflow: 'auto', background: '#0f172a', color: '#e6eef8', padding: 8, borderRadius: 6 }}>
+              {logs.length === 0 && <div className="text-xs text-gray-400">No logs yet.</div>}
+              {logs.map((m, i) => (
+                <div key={i} style={{ fontFamily: 'monospace', fontSize: 12, marginBottom: 6 }}>[{m.level || 'INFO'}] {m.timestamp ? new Date(m.timestamp).toLocaleTimeString() : ''} — {m.text}</div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <footer className="mt-8 text-xs text-gray-500">Peer review dashboard — mock data only.</footer>
     </div>
