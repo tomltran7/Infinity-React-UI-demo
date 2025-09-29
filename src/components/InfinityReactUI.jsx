@@ -572,15 +572,20 @@ import {
 const InfinityReactUI = () => {
   // ...existing code...
   const [activeTab, setActiveTab] = useState('changes');
-  const [selectedRepo, setSelectedRepo] = useState('Likely-To-Pay-Model');
+  const [selectedRepo, setSelectedRepo] = useState('Authorization_CSBD_DMN');
   const [repoDropdownOpen, setRepoDropdownOpen] = useState(false);
   const [repoSearchQuery, setRepoSearchQuery] = useState('');
   const [repoList, setRepoList] = useState([
-    'Likely-To-Pay-Model',
-    'Claims Processing Automation Model',
-    'Value-Based Reimbursement Model',
-    'FWA Detection Model',
-    'Provider Markets Optimizer Model'
+    'Authorization_CSBD_DMN',
+    'Authorization_GBD_DMN',
+    'Deny',
+    'Infinity-Instructions',
+    'Infinity-Mapping-Rules',
+    'Infinity-Mjr-Min-Heading-Rules',
+    'Infinity-Rules-Management',
+    'Kie-Server-Health',
+    'Open',
+    'Paid'
   ]);
   const filteredRepos = repoList.filter(repo => repo.toLowerCase().includes(repoSearchQuery.toLowerCase()));
   const [showAddRepo, setShowAddRepo] = useState(false);
@@ -594,21 +599,75 @@ const InfinityReactUI = () => {
   const [models, setModels] = useState([
     {
       id: 1,
-      title: 'Healthcare Claims Workflow',
-      repo: 'Likely-To-Pay-Model',
+      title: 'Authorization Indicator Check',
+      repo: 'Authorization_CSBD_DMN',
       columns: [
-        { name: 'Patient Age', type: 'Number', condition: 'Greater Than' },
-        { name: 'Claim Amount', type: 'Number', condition: 'Greater Than' },
-        { name: 'Diagnosis Code', type: 'String', condition: 'Equals' },
-        { name: 'Provider Type', type: 'String', condition: 'Equals' },
-        { name: 'Approval Status', type: 'String', condition: 'Equals' }
+        { name: 'Authorization Indicator', type: 'String', condition: 'Equals' },
+        { name: 'UM Core Edit', type: 'Boolean', condition: 'Equals' },
+        { name: 'Result', type: 'String', condition: 'Equals' }
       ],
       rows: [
-        [65, 1200, 'E11.9', 'Hospital', 'Approved'],
-        [34, 350, 'J45.909', 'Clinic', 'Denied'],
-        [50, 800, 'I10', 'Hospital', 'Pending'],
-        [72, 2200, 'E78.5', 'Specialist', 'Approved'],
-        [29, 150, 'M54.5', 'Clinic', 'Denied']
+        ['Y', 'TRUE', 'Proceed to Claim Level Bypass Check'],
+        ['-', '-', 'No action specified'],
+      ],
+      testCases: [],
+      changeLog: [],
+    },
+    {
+      id: 2,
+      title: 'Claim Level Bypass Check',
+      repo: 'Authorization_CSBD_DMN',
+      columns: [
+        { name: 'Authorization Indicator Check.Result', type: 'String', condition: 'Equals' },
+        { name: 'List Contains ("Hospital based Phys")', type: 'Boolean', condition: 'Equals' },
+        { name: 'Result', type: 'String', condition: 'Equals' }
+      ],
+      rows: [
+        ['Proceed to Claim Level Bypass Check', 'TRUE', 'Bypass UM due to Hospital based physician and apply member benefits'],
+        ['Proceed to Claim Level Bypass Check', 'FALSE', 'Proceed to Line Level Bypass Check'],
+        ['-', '-', 'No Rule Matched']
+      ],
+      testCases: [],
+      changeLog: []
+    },
+    {
+      id: 3,
+      title: 'Line Level Bypass Check',
+      repo: 'Authorization_CSBD_DMN',
+      columns: [
+        { name: 'Claim Level Bypass Check.Result', type: 'String', condition: 'Equals' },
+        { name: '(list contains(Claim Level Bypass Check.Data.Line.modifierCode , "26")) and not (list contains(Claim Level Bypass Check.Data.Line.modifierCode , "TC")', type: 'Boolean', condition: 'Equals' },
+        { name: '(list contains(Claim Level Bypass Check.Data.Line.businessLabel, lower case("Prior Auth Pass"))) and (Claim Level Bypass Check.Data.Line.preAuthorizationPassIndicator = "Y")', type: 'Boolean', condition: 'Equals' },
+        { name: '(list contains(Claim Level Bypass Check.Data.Line.businessLabel, lower case("Possible Prior Auth Pass"))) and not(list contains(Claim Level Bypass Check.Data.Line.businessLabel, lower case("UM denied case")))  and  (Claim Level Bypass Check.Data.Line.preAuthorizationPassIndicator = "Y")', type: 'Boolean', condition: 'Equals' },
+        { name: 'Result', type: 'String', condition: 'Equals' }
+      ],
+      rows: [
+        ['Proceed to Claim Level Bypass Check', 'TRUE', '-','-','Bypass UM, per modifier 26 and apply member benefits'],
+        ['Proceed to Claim Level Bypass Check', '-', 'TRUE','-','Bypass UM, per prior auth pass program and apply member benefits'],
+        ['Proceed to Claim Level Bypass Check', '-', '-','TRUE','Bypass UM, per prior auth pass program and apply member benefits'],
+        ['Proceed to Claim Level Bypass Check', '-', '-','-','No recommendation from Infinity'],
+        ['-','-','-', '-', 'No Rule Matched']
+      ],
+      testCases: [],
+      changeLog: []
+    },
+    {
+      id: 4,
+      title: 'Recommendation',
+      repo: 'Authorization_CSBD_DMN',
+      columns: [
+        { name: 'Authorization Indicator Check.Result', type: 'String', condition: 'Equals' },
+        { name: 'Claim Level Bypass Check.Result', type: 'String', condition: 'Equals' },
+        { name: 'Line Level Bypass Check.Result', type: 'String', condition: 'Equals' },
+        { name: 'Message', type: 'String', condition: 'Equals' },
+        { name: 'Decision', type: 'String', condition: 'Equals' },
+      ],
+      rows: [
+        ['No action specified','-','-','No UM required at line level','Bypass'],
+        ['-', 'Bypass UM due to Hospital based physician and apply member benefits', '-','Bypass UM due to Hospital based physician and apply member benefits','ClaimLevelBypass'],
+        ['-', '-','Bypass UM, per modifier 26 and apply member benefits','Bypass UM, per modifier 26 and apply member benefits','Bypass'],
+        ['-','-','Bypass UM, per prior auth pass program and apply member benefits','Bypass UM, per prior auth pass program and apply member benefits','Bypass'],
+        ['-','-','-', 'No recommendation from Infinity','Manual']
       ],
       testCases: [],
       changeLog: []
